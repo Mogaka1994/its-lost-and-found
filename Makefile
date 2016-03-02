@@ -30,11 +30,7 @@ reload: $(VENV_DIR)
 
 
 # build the virtualenv
-$(VENV_DIR): requirements.txt
-	@if [ -d "$(VENV_DIR)" ]; then \
-		echo "Directory exists: $(VENV_DIR)"; \
-		exit 1; \
-	fi
+$(VENV_DIR):
 	python3 -m venv $(VENV_DIR)
 	curl https://bootstrap.pypa.io/get-pip.py | python3
 	pip install -r requirements.txt
