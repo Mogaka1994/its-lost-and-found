@@ -6,8 +6,6 @@ PROJECT_NAME = its
 VENV_DIR ?= .env
 export PATH:=.env/bin:$(PATH):/usr/pgsql-9.3/bin:/usr/pgsql-9.1/bin
 MANAGE = ./manage.py
-OK_COLOR=\x1b[32;01m
-NO_COLOR=\x1b[0m
 
 # completely wipes out the database and environment and rebuilds it and loads some dummy data
 init:
