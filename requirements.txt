@@ -6,7 +6,6 @@ django-cloak
 pytz
 django-arcutils>=1.2.0,<2.0
 ldap3
-djangocas
 mock
 model-mommy
 coverage
