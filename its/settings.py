@@ -59,9 +59,17 @@ LOGOUT_URL = reverse_lazy("logout")
 # CELERY_ACKS_LATE = True
 # CELERY_RESULT_BACKEND = 'amqp'
 
-# uncomment to use CAS. You need to update requirements.txt too
-CAS_SERVER_URL = 'https://sso.pdx.edu/cas/'
-AUTHENTICATION_BACKENDS += ('its.backends.ITSBackend',)
+
+AUTHENTICATION_BACKENDS = (
+    'arcutils.cas.backends.CASModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+CAS = {
+    'response_callbacks': [
+        'arcutils.cas.callbacks.default_response_callback',
+        'its.backends.cas_response_callback',
+    ]
+}
 
 
 AUTH_USER_MODEL = 'users.User'
@@ -122,7 +130,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'djangocas.middleware.CASMiddleware',
 )
 
 ROOT_URLCONF = 'its.urls'

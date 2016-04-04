@@ -1,11 +1,11 @@
+-f https://cdn.research.pdx.edu/pypi/dist/
 varlet
 setuptools
 psycopg2
 django-cloak
 pytz
-git+https://github.com/PSU-OIT-ARC/django-arcutils.git#egg=django-arcutils
+django-arcutils>=1.2.0,<2.0
 ldap3
-djangocas
 mock
 model-mommy
 coverage

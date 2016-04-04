@@ -22,9 +22,11 @@ urlpatterns = patterns(
     url(r'^items/itemlist$', items.itemlist, name='itemlist'),
     url(r'^items/autocomplete/?$', items.autocomplete, name='users-autocomplete'),
     url(r'^items/(?P<item_id>\d+)/$', items.printoff, name='printoff'),
-    url(r'^accounts/login/$', 'djangocas.views.login', name='login'),
-    url(r'^accounts/logout/$', 'djangocas.views.logout', name='logout'),
 
+    # CAS Authentication
+    url(r'^accounts/login/$', 'arcutils.cas.views.login', name='login'),
+    url(r'^accounts/logout/$', 'arcutils.cas.views.logout', name='logout'),
+    url(r'^accounts/validate/$', 'arcutils.cas.views.validate', name='cas-validate'),
 
     url(r'^cloak/', include('cloak.urls'))
 )
