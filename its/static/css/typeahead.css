@@ -1,28 +1,28 @@
-.typeahead {
-background-color: #fff;
+.twitter-typeahead {
+    width: 100%;
 }
-.typeahead:focus {
-border: 2px solid #0097cf;
+.twitter-typeahead .tt-hint {
+    color: #909090;
 }
-.twitter-typeahead, .tt-input {
-width:100%;
+.twitter-typeahead .tt-menu {
+    background-color: #ffffff;
+    border: 1px solid #b0b0b0;
+    border-radius: 4px;
+    box-shadow: 2px 2px 4px;
+    margin-top: 2px;
 }
-.tt-hint {
-color: #999
+.twitter-typeahead .tt-suggestion {
+    border-bottom: 1px solid #c0c0c0;
+    padding: 8px;
 }
-.tt-dropdown-menu {
-background-color: #fff;
-border: 1px solid #ccc;
-border: 1px solid rgba(0, 0, 0, 0.2);
+.twitter-typeahead .tt-suggestion:nth-child(even) {
+    background-color: #f0f0f0;
 }
-.tt-suggestion {
-padding: 3px 20px;
-line-height: 24px;
+.twitter-typeahead .tt-suggestion:last-child {
+    border-bottom: none;
 }
-.tt-suggestion.tt-cursor {
-color: #fff;
-background-color: #0097cf;
-}
-.tt-suggestion p {
-margin: 0;
+.twitter-typeahead .tt-suggestion:hover {
+    background-color: #0097cf;
+    color: #ffffff;
+    cursor: pointer;
 }

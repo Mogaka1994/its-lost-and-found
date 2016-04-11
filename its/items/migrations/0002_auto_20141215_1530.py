@@ -14,13 +14,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='item',
             name='possible_owner',
-            field=models.ForeignKey(related_name='item_possible_owner', null=True, to='users.User'),
+            field=models.ForeignKey(related_name='item_possible_owner', null=True, to='auth.User'),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='item',
             name='returned_to',
-            field=models.ForeignKey(related_name='item_returned_to', null=True, to='users.User'),
+            field=models.ForeignKey(related_name='item_returned_to', null=True, to='auth.User'),
             preserve_default=True,
         ),
     ]

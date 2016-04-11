@@ -21,20 +21,20 @@
     </tr>
     <tr>
         <th>Valuable:</th>
-        <td>{{ item.is_valuable }}</td>
+        <td>{{ item.is_valuable|yesno|title }}</td>
     </tr>
     <tr>
         <th>Possible owner:</th>
-        <td>{{ item.possible_owner }}</td>
+        <td>{{ item.possible_owner.get_full_name|default:'N/A' }}</td>
     </tr>
     <tr>
         <th>Returned to:</th>
-        <td>{{ item.returned_to }}</td>
+        <td>{{ item.returned_to.get_full_name }}</td>
     </tr>
     {% if not exclude %}
         <tr>
             <th>Archived:</th>
-            <td>{{ item.is_archived }}</td>
+            <td>{{ item.is_archived|yesno|title }}</td>
         </tr>
     {% endif %}
     <tr>

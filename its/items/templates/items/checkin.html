@@ -1,41 +1,34 @@
-{% extends "base.html" %}
-
-    {% block head %}
-    <script>
-    
-    function source(query, callback){
-        var url = "{% url 'users-autocomplete' %}";
-        $.getJSON(url, {query: query}, function (data) {
-            callback(data);
-        });
-    }
-    </script>
-    <script src="{{ STATIC_URL }}js/checkin.js"></script>
-    {% endblock %}
-
+{% extends 'base.html' %}
 
 {% block content %}
-<form action="" method="post">
-    {% csrf_token %}
-    <div class="row">
-        <div class="col-md-2">
-            {{ form.location|bootstrap }}
-        </div>
-        <div class="col-md-2">
-            {{ form.category|bootstrap }}
-        </div>
-     </div>
-    {{ form.description|bootstrap }}
-    {{ form.is_valuable|bootstrap }}
-    {{ form.possible_owner_found|bootstrap }}
+    <form action="" method="post">
+        {% csrf_token %}
 
-    <div class="PossibleOwner" style="{% if not form.possible_owner_found.data %}display:none{% endif %}">
-        {{ form.username|bootstrap }}
-        {{ form.first_name|bootstrap }}
-        {{ form.last_name|bootstrap }}
-        {{ form.email|bootstrap }}
-        
-    </div>
-    <input type="submit" class="btn btn-primary" value="Submit" />
-</form>
+        <div class="row">
+            <div class="col-md-2">
+                {{ form.location|bootstrap }}
+            </div>
+            <div class="col-md-2">
+                {{ form.category|bootstrap }}
+            </div>
+        </div>
+
+        {{ form.description|bootstrap }}
+        {{ form.is_valuable|bootstrap }}
+        {{ form.possible_owner_found|bootstrap }}
+
+        <div id="possible-owner" style="{% if not form.possible_owner_found.data %}display:none{% endif %}">
+            {{ form.username|bootstrap }}
+            {{ form.first_name|bootstrap }}
+            {{ form.last_name|bootstrap }}
+            {{ form.email|bootstrap }}
+        </div>
+
+        <input type="submit" class="btn btn-primary" value="Submit">
+    </form>
+{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script src="{% static 'js/checkin.js' %}"></script>
 {% endblock %}

@@ -1,198 +1,130 @@
-import unittest
 import os
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from django.core.urlresolvers import reverse
-from django.core import mail
-from model_mommy.mommy import make
-from its.users.models import User
-from its.items.models import Item, Location, Category, Action, Status
-from its.items.forms import AdminActionForm, AdminItemFilterForm, ItemFilterForm, ItemArchiveForm, CheckInForm, check_ldap
-from its.backends import ITSBackend
+import unittest
 from unittest.mock import patch, Mock
 
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.core import mail
+from django.core.urlresolvers import reverse
 
+from model_mommy.mommy import make
+
+from its.items.models import Item, Location, Category, Action, Status
+from its.items.forms import AdminActionForm, AdminItemFilterForm, ItemFilterForm, ItemArchiveForm, CheckInForm, check_ldap
+from its.backends import ITSCASModelBackend
 
 
 def create_user():
-
-    """
-    Creates a blank lab attendant user.
-    """
-
-    user = make(User, is_active=True)
-    user.set_password("password")
+    """Create a blank lab attendant user."""
+    user = make(get_user_model(), is_active=True)
+    user.set_password('password')
     user.save()
     return user
 
 
 def create_full_user(first_name, last_name, email):
-
-    """
-    Creates a full customer user
-    """
-
-    user = make(User, first_name=first_name, last_name=last_name, email=email, is_active=False, is_staff=False)
-    user.set_password("password")
+    """Creates a full customer user."""
+    user = make(
+        get_user_model(), first_name=first_name, last_name=last_name, email=email, is_active=False,
+        is_staff=False)
+    user.set_password('password')
     user.save()
     return user
 
 
 def create_staff():
-
-    """
-    Creates a blank staff user.
-    """
-
-    user = make(User, is_active=True, is_staff=True)
-    user.set_password("password")
+    """Creates a blank staff user."""
+    user = make(get_user_model(), is_active=True, is_staff=True)
+    user.set_password('password')
     user.save()
     return user
 
-@unittest.skipIf("TRAVIS" in os.environ and os.environ["TRAVIS"] == "true", "Skipping this test on Travis CI.")
+
+@unittest.skipIf(os.environ.get('TRAVIS') == 'true', 'Skipping this test on Travis CI.')
 class ITSBackendTest(TestCase):
-    
+
     def test_get_or_init_user(self):
+        backend = ITSCASModelBackend()
+        backend.get_or_create_user({'username': 'wbaldwin'})
+        self.assertEqual(1, get_user_model().objects.all().count())
 
-        # This test failed on old code, now passes.
-        
-        # Provide a username that doesn't exist in the database.
-        # But is in one of the qualified user groups.
-        
-        # This code will fail if this user is no longer in ldap or has
-        # been removed from groups in backends.py
-        username = "will"
-        User = get_user_model()
-        backend = ITSBackend()
-        
-        backend.get_or_init_user(username)
-        backend.get_or_init_user(username)
 
-        self.assertEqual(1, User.objects.all().count())
-        
-        
-
-    
 class PrintoffTest(TestCase):
 
     def test_login_required(self):
-
-        """
-        Tests that the view sends the unauthenticated user to the login page.
-        """
-
-        response = self.client.get(reverse("printoff", args=[1]))
-        self.assertRedirects(response, reverse("login") + "?next=/items/1/", target_status_code=302)
+        response = self.client.get(reverse('printoff', args=[1]))
+        self.assertRedirects(response, reverse('login') + '?next=/items/1/', target_status_code=302)
 
     def test_get(self):
-
-        """
-        Tests that the view returns a page with the correct item information.
-        """
-
+        """Tests that the view returns a page with the correct item information."""
         user = create_user()
-        self.client.login(username=user.username, password="password")
-
+        self.client.login(username=user.username, password='password')
         item = make(Item)
         make(Status, item=item)
-
-        response = self.client.get(reverse("printoff", args=[item.pk]))
+        response = self.client.get(reverse('printoff', args=[item.pk]))
         self.assertEqual(200, response.status_code)
         self.assertIn(item.description, response.content.decode())
 
 
 class CheckInTest(TestCase):
 
-    fixtures = ["actions.json"]
+    fixtures = ['actions.json']
 
     def test_login_required(self):
-
-        """
-        Tests that the view sends the unauthenticated user to the login page.
-        """
-
-        response = self.client.get(reverse("checkin"))
-        self.assertRedirects(response, reverse("login") + "?next=/items/checkin", target_status_code=302)
+        response = self.client.get(reverse('checkin'))
+        self.assertRedirects(response, reverse('login') + '?next=/items/checkin', target_status_code=302)
 
     def test_get(self):
-
-        """
-        Tests that the view returns the checkin page.
-        """
-
+        """Tests that the view returns the checkin page."""
         user = create_user()
-        self.client.login(username=user.username, password="password")
-
-        response = self.client.get(reverse("checkin"))
+        self.client.login(username=user.username, password='password')
+        response = self.client.get(reverse('checkin'))
         self.assertEqual(200, response.status_code)
 
     def test_valid_post(self):
-
-        """
-        Tests that the view sends the user to the print off page after
-        a successful form submission.
-        """
-
+        """Tests that the view sends the user to the print off page
+        after a successful form submission."""
         user = create_user()
-        self.client.login(username=user.username, password="password")
-
-        with patch("its.items.views.CheckInForm.is_valid", return_value=True):
-            with patch("its.items.views.CheckInForm.save", return_value=Mock(pk=123)) as save:
-                data = {"foo": "bar"}
-                response = self.client.post(reverse("checkin"), data)
+        self.client.login(username=user.username, password='password')
+        with patch('its.items.views.CheckInForm.is_valid', return_value=True):
+            with patch('its.items.views.CheckInForm.save', return_value=Mock(pk=123)) as save:
+                data = {'foo': 'bar'}
+                response = self.client.post(reverse('checkin'), data)
                 self.assertTrue(save.call_args[1]['current_user'] == user)
-                self.assertRedirects(response, reverse("printoff", args=[123]), target_status_code=404)
+                self.assertRedirects(response, reverse('printoff', args=[123]), target_status_code=404)
 
     def test_invalid_post(self):
-
-        """
-        Tests that the view sends the user back to the checkin page if
-        they enter invalid data.
-        """
-
+        """Tests that the view sends the user back to the checkin page
+        if they enter invalid data."""
         user = create_user()
-        self.client.login(username=user.username, password="password")
-
-        with patch("its.items.views.CheckInForm.is_valid", return_value=False):
-            data = {"foo": "bar"}
-            response = self.client.post(reverse("checkin"), data)
+        self.client.login(username=user.username, password='password')
+        with patch('its.items.views.CheckInForm.is_valid', return_value=False):
+            data = {'foo': 'bar'}
+            response = self.client.post(reverse('checkin'), data)
             self.assertEqual(response.status_code, 200)
 
 
 class ItemlistTest(TestCase):
 
-    fixtures = ["actions.json"]
+    fixtures = ['actions.json']
 
     def test_login_required(self):
-
-        """
-        Tests that the view sends the unauthenticated user to the login page.
-        """
-
-        response = self.client.get(reverse("itemlist"))
-        self.assertRedirects(response, reverse("login") + "?next=/items/itemlist", target_status_code=302)
+        response = self.client.get(reverse('itemlist'))
+        self.assertRedirects(response, reverse('login') + '?next=/items/itemlist', target_status_code=302)
 
     def test_initial_get(self):
-
-        """
-        Tests that the view sends an authenticated user to the itemlist page.
-        """
-
+        """Tests that the view sends an authenticated user to the item
+        list page."""
         user = create_user()
-        self.client.login(username=user.username, password="password")
-
-        response = self.client.get(reverse("itemlist"))
+        self.client.login(username=user.username, password='password')
+        response = self.client.get(reverse('itemlist'))
         self.assertEqual(200, response.status_code)
 
     def test_filter_get(self):
-
-        """
-        Tests that the view directs the user to the itemlist page
-        after a filtering event.
-        """
-
+        """Tests that the view directs the user to the itemlist page
+        after a filtering event."""
         user = create_user()
-        self.client.login(username=user.username, password="password")
+        self.client.login(username=user.username, password='password')
 
         new_location = make(Location)
         new_category = make(Category)
@@ -211,20 +143,13 @@ class ItemlistTest(TestCase):
 class AdminActionTest(TestCase):
 
     def test_login_required(self):
-
-        """
-        Tests that the view sends the unauthenticated user to the login page.
-        """
-
-        response = self.client.get(reverse("admin-action", args=[1]))
-        self.assertRedirects(response, reverse("login") + "?next=/items/admin-action/1/", target_status_code=302)
+        response = self.client.get(reverse('admin-action', args=[1]))
+        self.assertRedirects(
+            response, reverse('login') + '?next=/items/admin-action/1/', target_status_code=302)
 
     def test_get(self):
-
-        """
-        Tests that the view returns the admin action page with the correct item information.
-        """
-
+        """Tests that the view returns the admin action page with the
+        correct item information."""
         user = create_staff()
         self.client.login(username=user.username, password="password")
 
@@ -239,149 +164,113 @@ class AdminActionTest(TestCase):
 class AdminItemlistTest(TestCase):
 
     def test_staff_required(self):
-
-        """
-        Tests that the view sends unauthenticated users to the login page.
-        """
-
         response = self.client.get(reverse('admin-itemlist'))
-        self.assertRedirects(response, reverse("login") + "?next=/items/admin-itemlist", target_status_code=302)
+        self.assertRedirects(
+            response, reverse('login') + '?next=/items/admin-itemlist', target_status_code=302)
 
     def test_initial_get(self):
-
-        """
-        Tests that the initial retrieval of the admin-itemlist page is correct
-        """
-
+        """Tests that the initial retrieval of the admin-itemlist page
+        is correct."""
         user = create_staff()
-        self.client.login(username=user.username, password="password")
-
-        response = self.client.get(reverse("admin-itemlist"))
+        self.client.login(username=user.username, password='password')
+        response = self.client.get(reverse('admin-itemlist'))
         self.assertEqual(200, response.status_code)
 
     def test_blank_post(self):
-
-        """
-        Tests that the view returns the user to the admin itemlist page
-        when a blank post request is made.
-        """
-
+        """Tests that the view returns the user to the admin itemlist
+        page when a blank post request is made."""
         user = create_staff()
-        self.client.login(username=user.username, password="password")
-
-        request = self.client.post(reverse("admin-itemlist"))
-        self.assertRedirects(request, reverse("admin-itemlist"))
+        self.client.login(username=user.username, password='password')
+        request = self.client.post(reverse('admin-itemlist'))
+        self.assertRedirects(request, reverse('admin-itemlist'))
 
     def test_valid_archive_post(self):
-
-        """
-        Tests that the view returns the user to the admin itemlist page
-        when a valid form is submitted.
-        """
-
+        """Tests that the view returns the user to the admin itemlist
+        page when a valid form is submitted."""
         user = create_staff()
-        self.client.login(username=user.username, password="password")
-
+        self.client.login(username=user.username, password='password')
         with patch('its.items.views.ItemArchiveForm.is_valid', return_value=True):
             with patch('its.items.views.ItemArchiveForm.save', return_value=True):
                 form = {'test': 'data'}
-
-                request = self.client.post(reverse("admin-itemlist"), form)
-                self.assertRedirects(request, reverse("admin-itemlist"))
+                request = self.client.post(reverse('admin-itemlist'), form)
+                self.assertRedirects(request, reverse('admin-itemlist'))
 
     def test_invalid_archive_post(self):
-
-        """
-        Tests that the view returns the user to the admin itemlist page
-        when an invalid form is submitted.
-        """
-
+        """Tests that the view returns the user to the admin item list
+        page when an invalid form is submitted."""
         user = create_staff()
-        self.client.login(username=user.username, password="password")
-
+        self.client.login(username=user.username, password='password')
         with patch('its.items.views.ItemArchiveForm.is_valid', return_value=False):
                 form = {'test': 'data'}
-
-                request = self.client.post(reverse("admin-itemlist"), form)
+                request = self.client.post(reverse('admin-itemlist'), form)
                 self.assertEqual(200, request.status_code)
 
 
-# Form tests
-
 class CheckInFormTest(TestCase):
 
-    fixtures = ["actions.json"]
+    fixtures = ['actions.json']
 
     def test_clean_errors(self):
-
-        """
-        Tests that the clean method does return errors when
-        the form is filled out incorrectly.
-        """
-
+        """Tests that the clean method does return errors when the form
+        is filled out incorrectly."""
         data = {
-            "possible_owner_found": "1",
-            "first_name": "",
-            "last_name": "",
-            "email": "",
-            "username": "a"
+            'possible_owner_found': '1',
+            'first_name': '',
+            'last_name': '',
+            'email': '',
+            'username': 'a'
         }
-
-        with patch("its.items.forms.ModelForm.clean", return_value=data):
-            with patch("its.items.forms.check_ldap", return_value=False):
-                with patch("its.items.forms.CheckInForm.add_error") as add_error:
+        with patch('its.items.forms.ModelForm.clean', return_value=data):
+            with patch('its.items.forms.check_ldap', return_value=False):
+                with patch('its.items.forms.CheckInForm.add_error') as add_error:
                     form = CheckInForm()
                     form.clean()
-                    add_error.assert_any_call_with("first_name", "First name required")
-                    add_error.assert_any_call_with("last_name", "Last name required")
-                    add_error.assert_any_call_with("email", "Email required")
-                    add_error.assert_any_call_with("username", "Invalid username, enter a valid username or leave blank.")
+                    add_error.assert_any_call_with('first_name', 'First name required')
+                    add_error.assert_any_call_with('last_name', 'Last name required')
+                    add_error.assert_any_call_with('email', 'Email required')
+                    add_error.assert_any_call_with('username', 'Invalid username, enter a valid username or leave blank.')
 
     def test_clean_no_errors(self):
-
-        """
-        Tests that the clean method does not return errors when
-        the form is filled out correctly.
-        """
-
-        data = {"possible_owner_found": "1",
-                "first_name": "Test",
-                "last_name": "Test",
-                "email": "test@test.com",
-                "username": "a", }
+        """Tests that the clean method does not return errors when the
+        form is filled out correctly."""
+        data = {
+            'possible_owner_found': '1',
+            'first_name': 'Test',
+            'last_name': 'Test',
+            'email': 'test@test.com',
+            'username': 'a',
+        }
 
         with patch('its.items.forms.ModelForm.clean', return_value=data):
             with patch('its.items.forms.check_ldap', return_value=True):
                 form = CheckInForm()
                 form.cleaned_data = form.clean()
-                self.assertTrue(form.cleaned_data['possible_owner_found'] == data['possible_owner_found'])
-                self.assertTrue(form.cleaned_data['username'] == data['username'])
-                self.assertTrue(form.cleaned_data['first_name'] == data['first_name'])
-                self.assertTrue(form.cleaned_data['last_name'] == data['last_name'])
-                self.assertTrue(form.cleaned_data['email'] == data['email'])
+                self.assertEqual(form.cleaned_data['possible_owner_found'], data['possible_owner_found'])
+                self.assertEqual(form.cleaned_data['username'], data['username'])
+                self.assertEqual(form.cleaned_data['first_name'], data['first_name'])
+                self.assertEqual(form.cleaned_data['last_name'], data['last_name'])
+                self.assertEqual(form.cleaned_data['email'], data['email'])
 
     def test_save_new_user(self):
-
-        """
-        Tests to make sure that the save method creates a new user when it
-        does not already exist in the database.
-        """
-
+        """Tests to make sure that the save method creates a new user
+        when it does not already exist in the database."""
         new_item = make(Item)
         new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
         make(Status, action_taken=new_action, item=new_item)
         new_category = make(Category)
         new_location = make(Location)
 
-        data = {'location': new_location,
-                'category': new_category,
-                'description': new_item.description,
-                'is_valuable': True,
-                'username': "",
-                'possible_owner_found': True,
-                'first_name': "test",
-                'last_name': "test",
-                'email': "test@test.com", }
+        data = {
+            'location': new_location,
+            'category': new_category,
+            'description': new_item.description,
+            'is_valuable': True,
+            'username': '',
+            'possible_owner_found': True,
+            'first_name': 'test',
+            'last_name': 'test',
+            'email': 'test@test.com',
+        }
 
         user = create_user()
 
@@ -389,21 +278,18 @@ class CheckInFormTest(TestCase):
             form = CheckInForm(data)
             form.cleaned_data = data
 
-            with patch("its.items.forms.ModelForm.save", return_value=new_item):
+            with patch('its.items.forms.ModelForm.save', return_value=new_item):
                 form.save(current_user=user)
-
-                new_user = User.objects.get(first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
-
-                self.assertTrue(data['first_name'] == new_user.first_name)
-                self.assertTrue(data['last_name'] == new_user.last_name)
-                self.assertTrue(data['email'] == new_user.email)
+                new_user = get_user_model().objects.get(
+                    first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
+                self.assertTrue(data['first_name'], new_user.first_name)
+                self.assertTrue(data['last_name'], new_user.last_name)
+                self.assertTrue(data['email'], new_user.email)
 
     def test_save_old_user(self):
-
-        """
-        Tests the save method to make sure it does not create a new user
-        when the user already exists in the database.
-        """
+        """Tests the save method to make sure it does not create a new
+        user when the user already exists in the database."""
+        user_model = get_user_model()
 
         new_item = make(Item)
         new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
@@ -424,23 +310,21 @@ class CheckInFormTest(TestCase):
         user = create_user()
         create_full_user(data['first_name'], data['last_name'], data['email'])
 
-        original_num_users = User.objects.all().count()
+        original_num_users = get_user_model().objects.all().count()
 
         with patch('its.items.forms.CheckInForm.clean', return_value=data):
             form = CheckInForm(data)
             form.cleaned_data = data
             with patch("its.items.forms.ModelForm.save", return_value=new_item):
                 form.save(current_user=user)
-                User.objects.get(first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
+                user_model.objects.get(
+                    first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
 
-                self.assertTrue(original_num_users == User.objects.all().count())
+                self.assertTrue(original_num_users == user_model.objects.all().count())
 
     def test_save_no_email(self):
-
-        """
-        Checks that an email is not sent when a non-valuable item is checked in.
-        """
-
+        """Checks that an email is not sent when a non-valuable item is
+        checked in."""
         new_item = make(Item, is_valuable=False)
         new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
         make(Status, action_taken=new_action, item=new_item)
@@ -468,11 +352,7 @@ class CheckInFormTest(TestCase):
                 self.assertEquals(len(mail.outbox), 0)
 
     def test_save_user_email(self):
-
-        """
-        Checks that an email was sent when a possible owner is indicated.
-        """
-
+        """Checks that an email was sent when a possible owner is indicated."""
         new_item = make(Item, is_valuable=False)
         new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
         make(Status, action_taken=new_action, item=new_item)
@@ -501,12 +381,8 @@ class CheckInFormTest(TestCase):
                 self.assertEquals(mail.outbox[0].subject, 'An item belonging to you was found')
 
     def test_save_staff_and_user_email(self):
-
-        """
-        Checks that an email is sent to the user as well as another to staff when a valuable
-        item is checked in.
-        """
-
+        """Checks that an email is sent to the user as well as another
+        to staff when a valuable item is checked in."""
         new_item = make(Item, is_valuable=True)
         new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
         make(Status, action_taken=new_action, item=new_item)
@@ -541,11 +417,7 @@ class ItemArchiveFormTest(TestCase):
     fixtures = ["actions.json"]
 
     def test_init(self):
-
-        """
-        Tests that the fields of the form are appended with archive fields.
-        """
-
+        """Tests that the fields of the form are appended with archive fields."""
         user = create_staff()
         self.client.login(username=user.username, password="password")
 
@@ -649,89 +521,92 @@ class AdminItemFilterFormTest(TestCase):
         new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
         make(Status, action_taken=new_action, item=new_item1)
 
-        data = {'select_items': "valuable",
-                'select_location': new_item1.location.name,
-                'select_category': new_item1.category.name,
-                'keyword_or_last_name': new_item1.description,
-                'sort_by': '', }
+        data = {
+            'items': 'valuable',
+            'location': new_item1.location.name,
+            'category': new_item1.category.name,
+            'keyword_or_last_name': new_item1.description,
+            'sort_by': '',
+        }
 
         item_filter_form = AdminItemFilterForm(data)
         item_list = item_filter_form.filter()
-
         values = item_list.values()
-
         self.assertEqual(values.get()['item_id'], new_item1.pk)
 
         # Test 2 - Archived item
 
         new_item2 = make(Item, is_archived=True, is_valuable=True)
 
-        data = {'select_items': "archived",
-                'select_location': None,
-                'select_category': None,
-                'keyword_or_last_name': new_item2.description,
-                'sort_by': '', }
+        data = {
+            'items': 'archived',
+            'location': None,
+            'category': None,
+            'keyword_or_last_name': new_item2.description,
+            'sort_by': '',
+        }
 
         with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
             values = item_list.values()
-
             self.assertEqual(values.get()['item_id'], new_item2.pk)
 
         # Test 3 - not valuable, not archived item
         new_item3 = make(Item, is_archived=False, is_valuable=False)
 
-        data = {'select_items': "",
-                'select_location': None,
-                'select_category': None,
-                'keyword_or_last_name': new_item3.description,
-                'sort_by': '', }
+        data = {
+            'items': '',
+            'location': None,
+            'category': None,
+            'keyword_or_last_name': new_item3.description,
+            'sort_by': '',
+        }
 
         with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
             values = item_list.values()
-
             self.assertEqual(values.get()['item_id'], new_item3.pk)
 
         # Test 4 - test item sorting
         make(Item, is_archived=False, is_valuable=False)
 
-        data = {'select_items': "",
-                'select_location': None,
-                'select_category': None,
-                'keyword_or_last_name': '',
-                'sort_by': 'pk', }
+        data = {
+            'items': '',
+            'location': None,
+            'category': None,
+            'keyword_or_last_name': '',
+            'sort_by': 'pk',
+        }
 
         with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
             values = item_list.values()
-
             self.assertLess(values[0]['item_id'], values[1]['item_id'])
             self.assertLess(values[1]['item_id'], values[2]['item_id'])
 
         # Test 5 - Search on last name
-        user = create_full_user("test", "test", "test@pdx.edu")
-
+        user = create_full_user('test', 'test', 'test@pdx.edu')
         new_item5 = make(Item, is_archived=False, is_valuable=False, possible_owner=user)
 
-        data = {'select_items': "",
-                'select_location': None,
-                'select_category': None,
-                'keyword_or_last_name': user.last_name,
-                'sort_by': '', }
+        data = {
+            'items': "",
+            'location': None,
+            'category': None,
+            'keyword_or_last_name': user.last_name,
+            'sort_by': '',
+        }
 
         with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
             values = item_list.values()
-
             self.assertEqual(values.get()['item_id'], new_item5.pk)
 
 
@@ -919,7 +794,6 @@ class AdminActionFormTest (TestCase):
             self.assertTrue(form.cleaned_data['note'] == data['note'])
 
     def test_save(self):
-
         """
         Test 1 - Check that the returned to field is set to None when an item
         has it's status set back to checked in
@@ -935,10 +809,11 @@ class AdminActionFormTest (TestCase):
 
         Test 5 Check that an existing user does not have an account created when
         an item is returned to them.
-        """
 
+        """
         # Test 1 Check that the returned to field is set to None when an item
         # has it's status set back to checked in
+        user_model = get_user_model()
 
         user = create_staff()
 
@@ -1010,8 +885,8 @@ class AdminActionFormTest (TestCase):
                 'email': "test@test.com", }
 
         try:
-            user_search = User.objects.get(first_name=data["first_name"])
-        except User.DoesNotExist:
+            user_search = user_model.objects.get(first_name=data["first_name"])
+        except user_model.DoesNotExist:
             user_search = None
 
         self.assertIsNone(user_search)
@@ -1024,8 +899,8 @@ class AdminActionFormTest (TestCase):
                 form.save(item_pk=new_item.pk, current_user=user)
 
                 try:
-                    user_search = User.objects.get(first_name=data["first_name"])
-                except User.DoesNotExist:
+                    user_search = user_model.objects.get(first_name=data["first_name"])
+                except user_model.DoesNotExist:
                     user_search = None
 
                 self.assertIsNotNone(user_search)
@@ -1033,7 +908,7 @@ class AdminActionFormTest (TestCase):
         # Test 5 Check that an existing user does not have an account created when
         # an item is returned to them.
 
-        num_users = User.objects.all().count()
+        num_users = user_model.objects.all().count()
 
         with patch('its.items.forms.AdminActionForm.is_valid', return_value=True):
             with patch('its.items.forms.AdminActionForm.clean', return_value=data):
@@ -1042,7 +917,7 @@ class AdminActionFormTest (TestCase):
                 form.cleaned_data = form.clean()
                 form.save(item_pk=new_item.pk, current_user=user)
 
-                self.assertEqual(num_users, User.objects.all().count())
+                self.assertEqual(num_users, user_model.objects.all().count())
 
 
 # Helper function tests

@@ -1,22 +1,23 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<h2>You are returning the following item:</h2>
+    <h2>You are returning the following item:</h2>
 
-{% include "items/item_table.html" %}
+    {% include 'items/item_table.html' %}
 
-<form action="" method="post">
-    {% csrf_token %}
-    <fieldset>
-        <legend>Enter the owner's name as it appears on their photo ID, as well as their email address.</legend>
-        <div class="row">
-            <div class="col-md-4">
-                {{ form.first_name|bootstrap }}
-                {{ form.last_name|bootstrap }}
-                {{ form.email|bootstrap }}
-                <input type="submit" name="action" class="btn btn-primary" value="Return Item">
-                <button class="btn btn-default pull-right" onclick="window.history.back()">Cancel</button>
+    <form method="post" action="">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Enter the owner's name as it appears on their photo ID, as well as their email address.</legend>
+            <div class="row">
+                <div class="col-md-4">
+                    {{ form.first_name|bootstrap }}
+                    {{ form.last_name|bootstrap }}
+                    {{ form.email|bootstrap }}
+                    <input type="submit" name="action" class="btn btn-primary" value="Return Item">
+                    <button class="btn btn-default pull-right" onclick="window.history.back()">Cancel</button>
+                </div>
             </div>
-        </div>
-    </fieldset>
-</form>
+        </fieldset>
+    </form>
 {% endblock %}

@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from django.db import migrations
 
-from django.db import models, migrations
 
 # -- View: last_status
 class Migration(migrations.Migration):
@@ -12,7 +10,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL("""
-
 DROP VIEW IF EXISTS last_status;
 
 CREATE OR REPLACE VIEW last_status AS 

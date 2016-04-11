@@ -7,7 +7,6 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
         ('items', '0002_auto_20141215_1530'),
     ]
 
@@ -23,7 +22,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='item',
             name='found_by',
-            field=models.ForeignKey(default=1, related_name='item_found_by', to='users.User'),
+            field=models.ForeignKey(default=1, related_name='item_found_by', to='auth.User'),
             preserve_default=False,
         ),
     ]

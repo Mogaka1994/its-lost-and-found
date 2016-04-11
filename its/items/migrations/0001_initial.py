@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
+        ('auth', '0001_initial'),
     ]
 
     operations = [
@@ -81,13 +81,13 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='item',
             name='possible_owner',
-            field=models.ForeignKey(to='users.User', related_name='item_possible_owner'),
+            field=models.ForeignKey(to='auth.User', related_name='item_possible_owner'),
             preserve_default=True,
         ),
         migrations.AddField(
             model_name='item',
             name='returned_to',
-            field=models.ForeignKey(to='users.User', related_name='item_returned_to'),
+            field=models.ForeignKey(to='auth.User', related_name='item_returned_to'),
             preserve_default=True,
         ),
     ]

@@ -7,7 +7,6 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
         ('items', '0009_auto_20141222_1232'),
     ]
 
@@ -15,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='status',
             name='performed_by',
-            field=models.ForeignKey(null=True, default=None, to='users.User'),
+            field=models.ForeignKey(null=True, default=None, to='auth.User'),
             preserve_default=True,
         ),
     ]

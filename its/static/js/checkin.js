@@ -1,60 +1,52 @@
-function initAutoComplete(selector){ 
-    selector.typeahead({
-        minLength: 2,
+$(document).ready(function () {
+
+    $('#id_username').typeahead({
+        minLength: 3,
         highlight: true
     }, {
-            name: "main",
-            source: source,
-            displayKey: "odin",
-            templates: {
-                        suggestion: function (context) {
-                            return ('<p>odin - full_name</p>'
-                                    .replace('odin', context.odin)
-                                    .replace('full_name', context.full_name));
-                        }
+        async: true,
+        display: 'username',
+        name: 'main',
+        limit: 10,
+        source: function source(query, syncCallback, asyncCallback) {
+            var params = {query: query};
+            $.getJSON(ITS.usersAutocompleteURL, params, function (data) {
+                asyncCallback(data);
+            });
+        },
+        templates: {
+            notFound: '<div class="tt-suggestion not-found">No matching users found</div>',
+            pending: '<div class="tt-suggestion">Searching for matching users...</div>',
+            suggestion: function (context) {
+                return ([
+                    '<div>',
+                        context.username,  ' - ',
+                        context.full_name,  ' - ',
+                        context.canonical_email_address,
+                    '</div>'
+                ].join(''));
             }
-        })
-        
-        // Could also use selector.on .. etc
-        // was on #id_ldap_search
-        $('#id_username').on('typeahead:selected', function (object, datum) {
-        // Example: {type: "typeahead:selected", timeStamp: 1377890016108, jQuery203017338529066182673: true, isTrigger: 3, namespace: ""...}
-        console.log(object);
+        }
+    });
 
-        // Datum containg value, tokens, and custom properties
-        // Example: {value: "@JakeHarding", tokens: ['Jake', 'Harding'], name: "Jake Harding", profileImageUrl: "https://twitter.com/JakeHaridng/profile_img"}
-        console.log(datum);
-        $("#id_first_name").val(datum.first_name);
-        $("#id_last_name").val(datum.last_name);
-        $("#id_username").val(datum.odin);
-        $("#id_email").val(datum.email);
-        });
-        
-}
-
-function possibleOwnerCheckbox(){ 
+    $('#id_username').on('typeahead:select', function (event, suggestion) {
+        $('#id_first_name').val(suggestion.first_name);
+        $('#id_last_name').val(suggestion.last_name);
+        $('#id_username').val(suggestion.username);
+        $('#id_email').val(suggestion.canonical_email_address);
+    });
     
-    if ($("#id_possible_owner_found").is(':checked')) {
-        $(".PossibleOwner").slideDown("fast"); //Slide Down Effect
-    }        
-    else {
-        $(".PossibleOwner").slideUp("fast");  //Slide Up Effect
+    function togglePossibleOwnerFields () {
+        if ($('#id_possible_owner_found').is(':checked')) {
+            $('#possible-owner').slideDown('fast');
+        } else {
+            $('#possible-owner').slideUp('fast');
+        }
     }
 
-}
-
-
-
-
-$(function(){
-    // Shows/Hides possibleOwnerFound class fields when the possible owner found checkbox
-    // is clicked on.
-    $("#id_possible_owner_found").click(possibleOwnerCheckbox);
-
-   
-   
-    // add the autocomplete functionality to all the odin fields, but make sure
-    // to skip the subform template, which has '__prefix__' in its name
-    initAutoComplete($("#id_username"));
-   
-}); 
+    $('#id_possible_owner_found').click(function () {
+        togglePossibleOwnerFields();
+    });
+    
+    togglePossibleOwnerFields();
+});

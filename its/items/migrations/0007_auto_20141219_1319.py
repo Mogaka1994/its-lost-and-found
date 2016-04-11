@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='item',
             name='found_by',
-            field=models.ForeignKey(to='users.User', related_name='item_found_by', default=1),
+            field=models.ForeignKey(to='auth.User', related_name='item_found_by', default=1),
             preserve_default=False,
         ),
     ]

@@ -1,61 +1,56 @@
-.PHONY: init clean run test coverage
+venv ?= .env
+venv_python ?= python3.3
+bin = $(venv)/bin
+arctasks = $(venv)/lib/$(venv_python)/site-packages/arctasks/__init__.py
 
-.DEFAULT_GOAL := run
+# The init task creates a temporary virtualenv with arctasks installed
+# for bootstrapping purposes and then delegates to the arctasks init
+# task to do the actual initialization.
+init: $(venv) local.dev.cfg local.test.cfg $(arctasks)
+	$(bin)/inv init --overwrite
+	$(bin)/inv test
 
-PROJECT_NAME = its
-VENV_DIR ?= .env
-export PATH:=.env/bin:$(PATH):/usr/pgsql-9.3/bin:/usr/pgsql-9.1/bin
-MANAGE = ./manage.py
+reinit: clean-egg-info clean-pyc clean-venv init
 
-# completely wipes out the database and environment and rebuilds it and loads some dummy data
-init:
-	rm -rf $(VENV_DIR)
-	@$(MAKE) $(VENV_DIR)
-	dropdb --if-exists $(PROJECT_NAME)
-	createdb $(PROJECT_NAME)
-	@$(MAKE) reload
-	$(MANAGE) loaddata actions.json
-	$(MANAGE) loaddata category.json
-	$(MANAGE) loaddata locations.json
-	@$(MANAGE) createadmin
+$(arctasks):
+	$(bin)/pip install git+https://github.com/PSU-OIT-ARC/arctasks#egg=psu.oit.arc.tasks
 
+local.dev.cfg:
+	echo '[dev]' >> $@
+	echo 'extends = "local.base.cfg"' >> $@
 
-# run all the usual Django stuff to get this project bootstrapped
-reload: $(VENV_DIR)
-	$(MANAGE) migrate
-	$(MANAGE) collectstatic --noinput
-	touch $(PROJECT_NAME)/wsgi.py
+local.test.cfg:
+	echo '[test]' >> $@
+	echo 'extends = "local.base.cfg"' >> $@
 
+$(venv):
+	virtualenv -p $(venv_python) $(venv)
+clean-venv:
+	rm -rf $(venv)
 
-# build the virtualenv
-$(VENV_DIR):
-	python3 -m venv $(VENV_DIR)
-	curl https://bootstrap.pypa.io/get-pip.py | python3
-	pip install -r requirements.txt
+test:
+	$(bin)/inv test
+test-all:
+	QT_TEST_SUBMIT_TICKETS="1" $(bin)/inv test
 
+run:
+	$(bin)/inv runserver
 
-# remove pyc junk
-clean:
-	find . -iname "*.pyc" -delete
-	find . -iname "*.pyo" -delete
-	find . -iname "__pycache__" -delete
+to ?= stage
+deploy:
+	$(bin)/inv --echo configure --env $(to) deploy
 
+clean: clean-pyc
+clean-all: clean-build clean-dist clean-egg-info clean-pyc clean-venv
+clean-build:
+	rm -rf build
+clean-dist:
+	rm -rf dist
+clean-egg-info:
+	rm -rf *.egg-info
+clean-pyc:
+	find . -name __pycache__ -type d -print0 | xargs -0 rm -r
+	find . -name '*.py[co]' -type f -print0 | xargs -0 rm
 
-# run the django web server
-host ?= 0.0.0.0
-port ?= 8000
-run: $(VENV_DIR)
-	$(MANAGE) runserver $(host):$(port)
-
-
-# run the unit tests
-# use `make test test=path.to.test` if you want to run a specific test
-test: $(VENV_DIR)
-	$(MANAGE) test $(test)
-
-
-# run the unit tests with coverage.
-# go to `0.0.0.0:8000/htmlcov/index.html` to view test coverage
-coverage: $(VENV_DIR)
-	coverage run ./manage.py test $(test)
-	coverage html --omit=.env/*
+.PHONY = init reinit test run deploy \
+         clean clean-all clean-build clean-dist clean-egg-info clean-pyc clean-venv
