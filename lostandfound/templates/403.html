@@ -1,0 +1,10 @@
+{% extends 'error.html' %}
+
+{% block error_title %}Permission Denied{% endblock %}
+
+{% block error_message %}
+    <p>You are not allowed to view this page.</p>
+    {% if request.permission_name %}
+        <p>The {{ request.permission_name }} permission is required.</p>
+    {% endif %}
+{% endblock %}
