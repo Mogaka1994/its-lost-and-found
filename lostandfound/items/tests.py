@@ -9,9 +9,9 @@ from django.core.urlresolvers import reverse
 
 from model_mommy.mommy import make
 
-from its.items.models import Item, Location, Category, Action, Status
-from its.items.forms import AdminActionForm, AdminItemFilterForm, ItemFilterForm, ItemArchiveForm, CheckInForm, check_ldap
-from its.backends import ITSCASModelBackend
+from ..backends import ITSCASModelBackend
+from .models import Item, Location, Category, Action, Status
+from .forms import AdminActionForm, AdminItemFilterForm, ItemFilterForm, ItemArchiveForm, CheckInForm, check_ldap
 
 
 def create_user():
@@ -86,8 +86,8 @@ class CheckInTest(TestCase):
         after a successful form submission."""
         user = create_user()
         self.client.login(username=user.username, password='password')
-        with patch('its.items.views.CheckInForm.is_valid', return_value=True):
-            with patch('its.items.views.CheckInForm.save', return_value=Mock(pk=123)) as save:
+        with patch('lostandfound.items.views.CheckInForm.is_valid', return_value=True):
+            with patch('lostandfound.items.views.CheckInForm.save', return_value=Mock(pk=123)) as save:
                 data = {'foo': 'bar'}
                 response = self.client.post(reverse('checkin'), data)
                 self.assertTrue(save.call_args[1]['current_user'] == user)
@@ -98,7 +98,7 @@ class CheckInTest(TestCase):
         if they enter invalid data."""
         user = create_user()
         self.client.login(username=user.username, password='password')
-        with patch('its.items.views.CheckInForm.is_valid', return_value=False):
+        with patch('lostandfound.items.views.CheckInForm.is_valid', return_value=False):
             data = {'foo': 'bar'}
             response = self.client.post(reverse('checkin'), data)
             self.assertEqual(response.status_code, 200)
@@ -189,8 +189,8 @@ class AdminItemlistTest(TestCase):
         page when a valid form is submitted."""
         user = create_staff()
         self.client.login(username=user.username, password='password')
-        with patch('its.items.views.ItemArchiveForm.is_valid', return_value=True):
-            with patch('its.items.views.ItemArchiveForm.save', return_value=True):
+        with patch('lostandfound.items.views.ItemArchiveForm.is_valid', return_value=True):
+            with patch('lostandfound.items.views.ItemArchiveForm.save', return_value=True):
                 form = {'test': 'data'}
                 request = self.client.post(reverse('admin-itemlist'), form)
                 self.assertRedirects(request, reverse('admin-itemlist'))
@@ -200,7 +200,7 @@ class AdminItemlistTest(TestCase):
         page when an invalid form is submitted."""
         user = create_staff()
         self.client.login(username=user.username, password='password')
-        with patch('its.items.views.ItemArchiveForm.is_valid', return_value=False):
+        with patch('lostandfound.items.views.ItemArchiveForm.is_valid', return_value=False):
                 form = {'test': 'data'}
                 request = self.client.post(reverse('admin-itemlist'), form)
                 self.assertEqual(200, request.status_code)
@@ -220,9 +220,9 @@ class CheckInFormTest(TestCase):
             'email': '',
             'username': 'a'
         }
-        with patch('its.items.forms.ModelForm.clean', return_value=data):
-            with patch('its.items.forms.check_ldap', return_value=False):
-                with patch('its.items.forms.CheckInForm.add_error') as add_error:
+        with patch('lostandfound.items.forms.ModelForm.clean', return_value=data):
+            with patch('lostandfound.items.forms.check_ldap', return_value=False):
+                with patch('lostandfound.items.forms.CheckInForm.add_error') as add_error:
                     form = CheckInForm()
                     form.clean()
                     add_error.assert_any_call_with('first_name', 'First name required')
@@ -241,8 +241,8 @@ class CheckInFormTest(TestCase):
             'username': 'a',
         }
 
-        with patch('its.items.forms.ModelForm.clean', return_value=data):
-            with patch('its.items.forms.check_ldap', return_value=True):
+        with patch('lostandfound.items.forms.ModelForm.clean', return_value=data):
+            with patch('lostandfound.items.forms.check_ldap', return_value=True):
                 form = CheckInForm()
                 form.cleaned_data = form.clean()
                 self.assertEqual(form.cleaned_data['possible_owner_found'], data['possible_owner_found'])
@@ -274,11 +274,11 @@ class CheckInFormTest(TestCase):
 
         user = create_user()
 
-        with patch('its.items.forms.CheckInForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.CheckInForm.clean', return_value=data):
             form = CheckInForm(data)
             form.cleaned_data = data
 
-            with patch('its.items.forms.ModelForm.save', return_value=new_item):
+            with patch('lostandfound.items.forms.ModelForm.save', return_value=new_item):
                 form.save(current_user=user)
                 new_user = get_user_model().objects.get(
                     first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
@@ -312,10 +312,10 @@ class CheckInFormTest(TestCase):
 
         original_num_users = get_user_model().objects.all().count()
 
-        with patch('its.items.forms.CheckInForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.CheckInForm.clean', return_value=data):
             form = CheckInForm(data)
             form.cleaned_data = data
-            with patch("its.items.forms.ModelForm.save", return_value=new_item):
+            with patch("lostandfound.items.forms.ModelForm.save", return_value=new_item):
                 form.save(current_user=user)
                 user_model.objects.get(
                     first_name=data['first_name'], last_name=data['last_name'], email=data['email'])
@@ -343,10 +343,10 @@ class CheckInFormTest(TestCase):
 
         user = create_user()
 
-        with patch('its.items.forms.CheckInForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.CheckInForm.clean', return_value=data):
             form = CheckInForm(data)
             form.cleaned_data = data
-            with patch("its.items.forms.ModelForm.save", return_value=new_item):
+            with patch("lostandfound.items.forms.ModelForm.save", return_value=new_item):
                 form.save(current_user=user)
 
                 self.assertEquals(len(mail.outbox), 0)
@@ -371,10 +371,10 @@ class CheckInFormTest(TestCase):
 
         user = create_user()
 
-        with patch('its.items.forms.CheckInForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.CheckInForm.clean', return_value=data):
             form = CheckInForm(data)
             form.cleaned_data = data
-            with patch("its.items.forms.ModelForm.save", return_value=new_item):
+            with patch("lostandfound.items.forms.ModelForm.save", return_value=new_item):
                 form.save(current_user=user)
 
                 self.assertEquals(len(mail.outbox), 1)
@@ -401,10 +401,10 @@ class CheckInFormTest(TestCase):
 
         user = create_user()
 
-        with patch('its.items.forms.CheckInForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.CheckInForm.clean', return_value=data):
             form = CheckInForm(data)
             form.cleaned_data = data
-            with patch("its.items.forms.ModelForm.save", return_value=new_item):
+            with patch("lostandfound.items.forms.ModelForm.save", return_value=new_item):
                 form.save(current_user=user)
 
                 self.assertEquals(len(mail.outbox), 2)
@@ -546,7 +546,7 @@ class AdminItemFilterFormTest(TestCase):
             'sort_by': '',
         }
 
-        with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
+        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
@@ -564,7 +564,7 @@ class AdminItemFilterFormTest(TestCase):
             'sort_by': '',
         }
 
-        with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
+        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
@@ -582,7 +582,7 @@ class AdminItemFilterFormTest(TestCase):
             'sort_by': 'pk',
         }
 
-        with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
+        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
@@ -602,7 +602,7 @@ class AdminItemFilterFormTest(TestCase):
             'sort_by': '',
         }
 
-        with patch('its.items.forms.AdminItemFilterForm.is_valid', return_value=True):
+        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
             item_filter_form = AdminItemFilterForm(data)
             item_filter_form.cleaned_data = data
             item_list = item_filter_form.filter()
@@ -686,7 +686,7 @@ class AdminActionFormTest (TestCase):
                 'last_name': '1234',
                 'email': 'test@test.com', }
 
-        with patch('its.items.forms.AdminActionForm.is_valid', return_value=True):
+        with patch('lostandfound.items.forms.AdminActionForm.is_valid', return_value=True):
             form = AdminActionForm(data, current_user=user)
             form.cleaned_data = data
             form.save(item_pk=new_item.pk, current_user=user)
@@ -713,8 +713,8 @@ class AdminActionFormTest (TestCase):
                 'last_name': "",
                 'email': "", }
 
-        with patch('its.items.forms.AdminActionForm.clean', return_value=data):
-                with patch("its.items.forms.AdminActionForm.add_error") as add_error:
+        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
+                with patch("lostandfound.items.forms.AdminActionForm.add_error") as add_error:
                     form = AdminActionForm(data, current_user=user)
                     form.clean()
 
@@ -732,8 +732,8 @@ class AdminActionFormTest (TestCase):
                 'last_name': "",
                 'email': "", }
 
-        with patch('its.items.forms.AdminActionForm.clean', return_value=data):
-                with patch("its.items.forms.AdminActionForm.add_error") as add_error:
+        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
+                with patch("lostandfound.items.forms.AdminActionForm.add_error") as add_error:
                     form = AdminActionForm(data, current_user=user)
                     form.clean()
 
@@ -770,7 +770,7 @@ class AdminActionFormTest (TestCase):
                 'last_name': "1234",
                 'email': "test@test.com", }
 
-        with patch('its.items.forms.AdminActionForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
             form = AdminActionForm(data, current_user=user)
             form.cleaned_data = form.clean()
 
@@ -787,7 +787,7 @@ class AdminActionFormTest (TestCase):
                 'last_name': "",
                 'email': "", }
 
-        with patch('its.items.forms.AdminActionForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
             form = AdminActionForm(data, current_user=user)
             form.cleaned_data = form.clean()
 
@@ -826,8 +826,8 @@ class AdminActionFormTest (TestCase):
                 'last_name': "",
                 'email': "", }
 
-        with patch('its.items.forms.AdminActionForm.is_valid', return_value=True):
-            with patch('its.items.forms.AdminActionForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.AdminActionForm.is_valid', return_value=True):
+            with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
 
                 form = AdminActionForm(data, current_user=user)
                 form.cleaned_data = form.clean()
@@ -845,8 +845,8 @@ class AdminActionFormTest (TestCase):
                 'last_name': "1234",
                 'email': "test@test.com", }
 
-        with patch('its.items.forms.AdminActionForm.is_valid', return_value=True):
-            with patch('its.items.forms.AdminActionForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.AdminActionForm.is_valid', return_value=True):
+            with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
 
                 form = AdminActionForm(data, current_user=user)
                 form.cleaned_data = form.clean()
@@ -865,8 +865,8 @@ class AdminActionFormTest (TestCase):
                 'last_name': "1234",
                 'email': "test@test.com", }
 
-        with patch('its.items.forms.AdminActionForm.is_valid', return_value=True):
-            with patch('its.items.forms.AdminActionForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.AdminActionForm.is_valid', return_value=True):
+            with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
 
                 form = AdminActionForm(data, current_user=user)
                 form.cleaned_data = form.clean()
@@ -891,8 +891,8 @@ class AdminActionFormTest (TestCase):
 
         self.assertIsNone(user_search)
 
-        with patch('its.items.forms.AdminActionForm.is_valid', return_value=True):
-            with patch('its.items.forms.AdminActionForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.AdminActionForm.is_valid', return_value=True):
+            with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
 
                 form = AdminActionForm(data, current_user=user)
                 form.cleaned_data = form.clean()
@@ -910,8 +910,8 @@ class AdminActionFormTest (TestCase):
 
         num_users = user_model.objects.all().count()
 
-        with patch('its.items.forms.AdminActionForm.is_valid', return_value=True):
-            with patch('its.items.forms.AdminActionForm.clean', return_value=data):
+        with patch('lostandfound.items.forms.AdminActionForm.is_valid', return_value=True):
+            with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
 
                 form = AdminActionForm(data, current_user=user)
                 form.cleaned_data = form.clean()
@@ -931,7 +931,7 @@ class checkLdapTest(TestCase):
         that is in LDAP.
         """
 
-        with patch('its.items.forms.ldapsearch', return_value=True):
+        with patch('lostandfound.items.forms.ldapsearch', return_value=True):
             user = check_ldap("test12345")
             self.assertTrue(user)
 
@@ -942,6 +942,6 @@ class checkLdapTest(TestCase):
         is not in LDAP.
         """
 
-        with patch('its.items.forms.ldapsearch', return_value=False):
+        with patch('lostandfound.items.forms.ldapsearch', return_value=False):
             user = check_ldap("test12345")
             self.assertFalse(user)

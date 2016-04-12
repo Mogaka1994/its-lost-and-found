@@ -44,5 +44,5 @@ def create_wsgi_application(root, settings_module=None, local_settings_file=None
 
 
 root = os.path.dirname(os.path.dirname(__file__))
-settings_module = 'its.settings'  # IMPORTANT: Replace {package}
+settings_module = 'lostandfound.settings'  # IMPORTANT: Replace {package}
 application = create_wsgi_application(root, settings_module)

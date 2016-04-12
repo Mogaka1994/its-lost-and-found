@@ -7,14 +7,14 @@ from django.shortcuts import render, get_object_or_404
 
 from arcutils.ldap import ldapsearch
 
-from its.items.forms import (
+from .forms import (
     AdminActionForm,
     AdminItemFilterForm,
     CheckInForm,
     ItemArchiveForm,
     ItemFilterForm,
 )
-from its.items.models import Item, Status
+from .models import Item, Status
 
 
 @user_passes_test(lambda u: u.is_staff)

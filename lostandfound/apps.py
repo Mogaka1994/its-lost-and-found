@@ -3,7 +3,7 @@ from django.apps import AppConfig
 
 class MainAppConfig(AppConfig):
 
-    name = 'its'
+    name = 'lostandfound'
 
     def ready(self):
         # The following enables legacy ARCUtils behavior by adding a

@@ -8,7 +8,7 @@ from django.template.loader import render_to_string
 
 from arcutils.ldap import escape, ldapsearch
 
-from its.items.models import Item, Location, Category, Status, Action
+from .models import Item, Location, Category, Status, Action
 
 
 def check_ldap(username):
