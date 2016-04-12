@@ -118,16 +118,20 @@ class Item(models.Model):
     returned_to = models.ForeignKey(AUTH_USER_MODEL, related_name='item_returned_to', null=True)
 
     @property
+    def first_status(self):
+        return self.status_set.all()[self.status_set.count() - 1]
+
+    @property
     def last_status(self):
-        return self.status_set.first()
+        return self.status_set.all()[0]
 
     @property
     def found_on(self):
-        return self.status_set.last().timestamp
+        return self.first_status.timestamp
 
     @property
     def found_by(self):
-        return self.status_set.last().performed_by
+        return self.first_status.performed_by
 
     def __str__(self):
         return self.description

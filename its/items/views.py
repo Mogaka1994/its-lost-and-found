@@ -27,6 +27,9 @@ def admin_itemlist(request):
     """
     item_filter_form = AdminItemFilterForm(request.GET if 'action' in request.GET else None)
     item_list = item_filter_form.filter()
+    item_list = item_list.select_related('category', 'location', 'possible_owner', 'returned_to')
+    item_list = item_list.prefetch_related(
+        'status_set', 'status_set__action_taken', 'status_set__performed_by')
 
     if request.method == 'POST':
         item_archive_form = ItemArchiveForm(request.POST, item_list=item_list)
@@ -80,6 +83,8 @@ def itemlist(request):
     """
     item_filter_form = ItemFilterForm(request.GET if 'action' in request.GET else None)
     item_list = item_filter_form.filter()
+    item_list = item_list.select_related('category', 'location', 'possible_owner')
+    item_list = item_list.prefetch_related('status_set', 'status_set__action_taken')
     return render(request, 'items/itemlist.html', {
         'items': item_list,
         'item_filter': item_filter_form,
