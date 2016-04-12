@@ -23,6 +23,13 @@ body {
     padding-top: 24px;
     padding-bottom: 24px;
 }
+#header h2 {
+    margin: 8px 0 0 0;
+}
+#header h2 a {
+    color: white;
+    text-decoration: none;
+}
 
 #upper-info {
     float: right;

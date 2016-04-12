@@ -25,9 +25,16 @@
 
             <div class="{% if user.is_cloaked %}cloak-pushdown{% endif %}">
                 <div class="container-fluid hidden-print" id="header">
-                    <a href="http://www.pdx.edu/">
-                        <img src="{% static 'img/logo.png' %}" alt="PSU home page">
-                    </a>
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <a href="http://www.pdx.edu/">
+                                <img src="{% static 'img/logo.png' %}" alt="PSU home page">
+                            </a>
+                        </div>
+                        <div class="col-xs-6 text-right">
+                            <h2><a href="/">{{ PROJECT.title }}</a></h2>
+                        </div>
+                    </div>
                 </div>
 
                 <nav class="navbar navbar-default">
