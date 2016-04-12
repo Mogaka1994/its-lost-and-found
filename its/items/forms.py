@@ -129,7 +129,10 @@ class AdminActionForm(forms.Form):
         elif action_choice.machine_name == Action.RETURNED:
             user_model = get_user_model()
             returned_user = user_model.objects.filter(
-                first_name=first_name, last_name=last_name, email=email).first()
+                first_name__iexact=first_name,
+                last_name__iexact=last_name,
+                email__iexact=email
+            ).first()
             if returned_user is None:
                 returned_user = create_user(first_name, last_name, email)
             item.returned_to = returned_user
