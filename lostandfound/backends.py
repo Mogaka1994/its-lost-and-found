@@ -21,15 +21,16 @@ class ITSCASModelBackend(CASModelBackend):
 
         # Get the list of groups the user is in.
         member_of = [] if not results else results[0]['member_of']
+        groups = [g['name'].lower() for g in member_of]
 
-        if 'cn=its_lab_students_gg' in member_of:
+        if 'its_lab_students_gg' in groups:
             user.is_active = True
 
-        if 'cn=its_cavs_staff_gg' in member_of:
+        if 'its_cavs_staff_gg' in groups:
             user.is_active = True
             user.is_staff = True
 
-        if 'cn=tlc_gg' in member_of:
+        if 'tlc_gg' in groups:
             user.is_active = True
             user.is_staff = True
 
