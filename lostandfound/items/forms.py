@@ -67,7 +67,7 @@ class AdminActionForm(forms.Form):
 
         ctx = {
             'found_on': str(item.found_on),
-            'possible_owner_name': str(item.possible_owner),
+            'possible_owner': item.possible_owner,
             'returned_by': str(item.last_status.performed_by),
             'returned_to': str(item.returned_to),
             'found_in': item.location.name,
@@ -298,7 +298,7 @@ class CheckInForm(ModelForm):
 
         ctx = {
             'found_on': str(item.found_on),
-            'possible_owner_name': str(item.possible_owner),
+            'possible_owner': item.possible_owner,
             'found_by': str(item.found_by),
             'found_in': item.location.name,
             'category': item.category.name,
@@ -317,7 +317,7 @@ class CheckInForm(ModelForm):
         from_email = settings.ITS.CHECKIN_EMAIL_FROM
 
         ctx = {
-            'possible_owner_name': str(item.possible_owner),
+            'possible_owner': item.possible_owner,
             'found_in': item.location.name,
         }
 
