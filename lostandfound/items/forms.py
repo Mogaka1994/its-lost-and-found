@@ -276,16 +276,14 @@ class ItemArchiveForm(forms.Form):
 
 class CheckInForm(ModelForm):
 
-    """Form for the checkin view."""
-
     class Meta:
         model = Item
-        fields = ['location', 'category', 'description', 'is_valuable']
+        fields = ('location', 'category', 'description', 'is_valuable')
 
-    possible_owner_found = forms.BooleanField(required=False)
     username = forms.CharField(
         required=False, label='Odin username',
         help_text='Start typing a username for suggestions')
+    possible_owner_found = forms.BooleanField(required=False)
     first_name = forms.CharField(required=False)
     last_name = forms.CharField(required=False)
     email = forms.EmailField(required=False)
@@ -295,96 +293,65 @@ class CheckInForm(ModelForm):
         subject = 'Valuable item checked in'
         to = settings.ITS.CHECKIN_EMAIL_TO
         from_email = settings.ITS.CHECKIN_EMAIL_FROM
-
-        ctx = {
-            'found_on': str(item.found_on),
-            'possible_owner': item.possible_owner,
-            'found_by': str(item.found_by),
-            'found_in': item.location.name,
-            'category': item.category.name,
-            'description': item.description
-        }
-
-        message = render_to_string('items/checkin_email.txt', ctx)
-
+        message = render_to_string('items/checkin_email.txt', {'item': item})
         EmailMessage(subject, message, to=to, from_email=from_email).send()
 
     def user_checkin_email(self, item, possible_owner):
         """Send an email to a possible owner when an item they own is checked in."""
-
         subject = 'An item belonging to you was found'
         to = [possible_owner.email]
         from_email = settings.ITS.CHECKIN_EMAIL_FROM
-
-        ctx = {
-            'possible_owner': item.possible_owner,
-            'found_in': item.location.name,
-        }
-
         if item.category.machine_name == Category.USB:
-            message = render_to_string('items/user_checkin_email_usb.txt', ctx)
-
+            template = 'items/user_checkin_email_usb.txt'
         elif item.category.machine_name == Category.ID:
-            message = render_to_string('items/user_checkin_email_id.txt', ctx)
-
+            template = 'items/user_checkin_email_id.txt'
         else:
-            message = render_to_string('items/user_checkin_email_all_other.txt', ctx)
-
+            template = 'items/user_checkin_email_all_other.txt'
+        message = render_to_string(template, {'item': item})
         EmailMessage(subject, message, to=to, from_email=from_email).send()
 
     def clean(self):
-        """If a possible owner has been found, force the person to
-        provide a first name, last name, and email."""
         cleaned_data = super(CheckInForm, self).clean()
-        username = cleaned_data.get("username")
-        first_name = cleaned_data.get("first_name")
-        last_name = cleaned_data.get("last_name")
-        email = cleaned_data.get("email")
-        possible_owner_found = cleaned_data.get("possible_owner_found")
-
-        # If possilbe owner found is checked we need to make these
-        # optional fields required.
-        if possible_owner_found and not first_name:
-            self.add_error("first_name", "First name required")
-
-        if possible_owner_found and not last_name:
-            self.add_error("last_name", "Last name required")
-
-        if possible_owner_found and not email:
-            self.add_error("email", "Email required")
-
-        if possible_owner_found and username and not check_ldap(username):
-            self.add_error("username", "Invalid username, enter a valid username or leave blank.")
-
+        if cleaned_data.get('possible_owner_found'):
+            if not cleaned_data.get('first_name'):
+                self.add_error('first_name', 'First name required')
+            if not cleaned_data.get('last_name'):
+                self.add_error('last_name', 'Last name required')
+            if not cleaned_data.get('email'):
+                self.add_error('email', 'Email required')
+            username = cleaned_data.get('username')
+            if username and not check_ldap(username):
+                self.add_error(
+                    'username', 'Invalid username; enter a valid username or leave blank')
         return cleaned_data
 
     def save(self, *args, current_user, **kwargs):
-        """If a possible owner has been found send them an email. If an
-        item is valuable send the staff mailing list an email."""
         user_first_name = self.cleaned_data['first_name']
         user_last_name = self.cleaned_data['last_name']
         user_email = self.cleaned_data['email']
 
-        # If an owner was found we need to record them as an owner
-        # This may require that a new user is created
-        if self.cleaned_data.get("possible_owner_found") is True:
+        # If an owner was found we need to record them as an owner. This
+        # may require that a new user is created.
+        if self.cleaned_data.get('possible_owner_found'):
             user_model = get_user_model()
             checkin_user = user_model.objects.filter(
-                first_name=user_first_name, last_name=user_last_name, email=user_email).first()
+                first_name__iexact=user_first_name,
+                last_name__iexact=user_last_name,
+                email__iexact=user_email
+            ).first()
             if checkin_user is None:
                 checkin_user = create_user(user_first_name, user_last_name, user_email)
             self.instance.possible_owner = checkin_user
 
         item = super(CheckInForm, self).save(*args, **kwargs)
-
         new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
         Status.objects.create(
-            item=item, action_taken=new_action, note="Initial check-in", performed_by=current_user)
+            item=item, action_taken=new_action, note='Initial check-in', performed_by=current_user)
 
-        if self.cleaned_data['email'] != '':
+        if self.cleaned_data['possible_owner_found']:
             self.user_checkin_email(item, checkin_user)
 
-        if self.cleaned_data['is_valuable'] is True:
+        if self.cleaned_data['is_valuable']:
             self.checkin_email(item)
 
         return item

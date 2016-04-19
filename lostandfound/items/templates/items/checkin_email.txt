@@ -1,8 +1,8 @@
 The following item was found:
 
-Found on: {{ found_on }}
-Found in: {{ found_in }}
-Found by: {{ found_by }}
-Category: {{ category }}
-Description: {{ description }}
-Possible owner: {{ possible_owner.get_full_name }}
+Found on: {{ item.found_on }}
+Found in: {{ item.location.name }}
+Found by: {{ item.found_by }}
+Category: {{ item.category.name }}
+Description: {{ item.description }}
+Possible owner: {{ item.possible_owner.get_full_name }}
