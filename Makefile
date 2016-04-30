@@ -1,5 +1,5 @@
 venv ?= .env
-venv_python ?= python3.3
+venv_python ?= python3.5
 bin = $(venv)/bin
 arctasks = $(venv)/lib/$(venv_python)/site-packages/arctasks/__init__.py
 
