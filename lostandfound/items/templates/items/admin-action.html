@@ -40,7 +40,7 @@
                 <h3>Return this item</h3>
             {% endif %}
 
-            {{ form.action_choice|bootstrap }}
+            {% if user.is_staff %}{{ form.action_choice|bootstrap }}{% endif %}
             {{ form.note|bootstrap  }}
 
             <div class="return-fields">
