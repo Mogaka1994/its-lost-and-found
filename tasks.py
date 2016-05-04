@@ -8,4 +8,4 @@ def init(ctx, overwrite=False, drop_db=False):
     install(ctx)
     createdb(ctx, drop=drop_db)
     migrate(ctx)
-    manage(ctx, ('loaddata', 'actions.json', 'category.json', 'locations.json'))
+    manage(ctx, ('loaddata', 'actions', 'category', 'locations'))
