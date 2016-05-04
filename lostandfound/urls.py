@@ -1,10 +1,11 @@
-from django.conf.urls import url
+from django.conf.urls import include, url
 from django.http import HttpResponseServerError
 from django.template import loader
 from django.views.decorators.csrf import requires_csrf_token
 
 from arcutils.cas import views as cas_views
 
+from . import admin
 from .items import views as items
 from .views import home
 
@@ -23,6 +24,8 @@ urlpatterns = [
     url(r'^accounts/login/$', cas_views.login, name='login'),
     url(r'^accounts/logout/$', cas_views.logout, name='logout'),
     url(r'^accounts/validate/$', cas_views.validate, name='cas-validate'),
+
+    url(r'^admin/', include(admin.site.urls)),
 ]
 
 
