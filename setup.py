@@ -16,11 +16,11 @@ setup(
     install_requires=[
         'django>=1.9.6',
         'django-arcutils[ldap]>=2.9.1',
-        'django-bootstrap-form>=3.2',
+        'django-bootstrap-form>=3.2.1',
         'django-local-settings>=1.0a20',
         'django_pgcli>=0.0.2',
         'psycopg2>=2.6.1',
-        'pytz>=2016.3',
+        'pytz>=2016.4',
     ],
     extras_require={
         'dev': [
