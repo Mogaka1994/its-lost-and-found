@@ -1,11 +1,11 @@
 from django.conf.urls import include, url
+from django.contrib import admin
 from django.http import HttpResponseServerError
 from django.template import loader
 from django.views.decorators.csrf import requires_csrf_token
 
 from arcutils.cas import views as cas_views
 
-from . import admin
 from .items import views as items
 from .views import home
 
