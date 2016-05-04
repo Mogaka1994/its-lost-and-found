@@ -1,3 +1,5 @@
+from django.contrib.auth.models import Group
+
 from arcutils.cas.backends import CASModelBackend
 from arcutils.ldap import ldapsearch, escape
 
@@ -41,6 +43,12 @@ class ITSCASModelBackend(CASModelBackend):
             user.is_active = True
             user.is_staff = True
             user.is_superuser = True
+
+        staff_group, _ = Group.objects.get_or_create(name='staff')
+        if user.is_staff:
+            user.groups.add(staff_group)
+        else:
+            user.groups.remove(staff_group)
 
         user.save()
         return user
