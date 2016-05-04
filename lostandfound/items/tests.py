@@ -210,25 +210,27 @@ class CheckInFormTest(TestCase):
 
     fixtures = ['actions.json']
 
-    def test_clean_errors(self):
-        """Tests that the clean method does return errors when the form
-        is filled out incorrectly."""
+    def test_ensure_user_data_is_required_when_there_is_a_possible_owner(self):
         data = {
             'possible_owner_found': '1',
             'first_name': '',
             'last_name': '',
             'email': '',
-            'username': 'a'
+            'username': 'fakefakefakefakepantspantspantspantsxxxxxxxxxx',
         }
-        with patch('lostandfound.items.forms.ModelForm.clean', return_value=data):
-            with patch('lostandfound.items.forms.check_ldap', return_value=False):
-                with patch('lostandfound.items.forms.CheckInForm.add_error') as add_error:
-                    form = CheckInForm()
-                    form.clean()
-                    add_error.assert_any_call_with('first_name', 'First name required')
-                    add_error.assert_any_call_with('last_name', 'Last name required')
-                    add_error.assert_any_call_with('email', 'Email required')
-                    add_error.assert_any_call_with('username', 'Invalid username, enter a valid username or leave blank.')
+        form = CheckInForm(data)
+        with patch('lostandfound.items.forms.check_ldap', return_value=False):
+            is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('first_name', errors)
+        self.assertIn('last_name', errors)
+        self.assertIn('email', errors)
+        self.assertIn('username', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['first_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['last_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['email']))
+        self.assertTrue(any('invalid' in e.lower() for e in errors['username']))
 
     def test_clean_no_errors(self):
         """Tests that the clean method does not return errors when the
@@ -694,63 +696,54 @@ class AdminActionFormTest (TestCase):
             self.assertEquals(len(mail.outbox), 1)
             self.assertEquals(mail.outbox[0].subject, 'Valuable item checked out')
 
-    def test_clean_with_errors(self):
+    def test_ensure_user_data_is_required_when_returning_an_item(self):
+        # Test 1 - Ensure first name, last name, and email are required
+        # when returning an item.
+        data = {
+            'note': '',
+            'first_name': '',
+            'last_name': '',
+            'email': '',
+        }
+        form = AdminActionForm(data, current_user=create_user())
+        is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('first_name', errors)
+        self.assertIn('last_name', errors)
+        self.assertIn('email', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['first_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['last_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['email']))
 
-        """
-        Test 1 - Check that errors appear when returning item with bad data.
-        Test 2 - Check that errors appear when performing other action with bad data.
-        Test 3 - Check that errors appear when action_choice is of type None.
-        """
+    def test_ensure_note_is_required_for_other_action(self):
+        data = {
+            'action_choice': Action.objects.get(machine_name=Action.OTHER).pk,
+            'note': '',
+            'first_name': '',
+            'last_name': '',
+            'email': '',
+        }
+        form = AdminActionForm(data, current_user=create_staff())
+        is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('note', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['note']))
 
-        # Test 1 - Check for errors when returning item.
-        user = create_staff()
-
-        new_action = Action.objects.get(machine_name=Action.RETURNED)
-
-        data = {'action_choice': new_action,
-                'note': "",
-                'first_name': "",
-                'last_name': "",
-                'email': "", }
-
-        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
-                with patch("lostandfound.items.forms.AdminActionForm.add_error") as add_error:
-                    form = AdminActionForm(data, current_user=user)
-                    form.clean()
-
-                    add_error.assert_any_call_with("first_name", "First name is required when returning item.")
-                    add_error.assert_any_call_with("last_name", "Last name is required when returning item.")
-                    add_error.assert_any_call_with("email", "Email is required when returning item.")
-
-        # Test 2 - Check for errors when selecting other action.
-
-        new_action = Action.objects.get(machine_name=Action.OTHER)
-
-        data = {'action_choice': new_action,
-                'note': "",
-                'first_name': "",
-                'last_name': "",
-                'email': "", }
-
-        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
-                with patch("lostandfound.items.forms.AdminActionForm.add_error") as add_error:
-                    form = AdminActionForm(data, current_user=user)
-                    form.clean()
-
-                    add_error.assert_any_call_with("note", "Note required when choosing action of type Other.")
-
-        # Test 3 - Check for errors when action_choice not in dictionary.
-        # Failed as NoneType AttributeError for machine_name in clean on old code.
-        user = create_user()
-
-        data = {'action_choice': None,
-                'note': "",
-                'first_name': "",
-                'last_name': "",
-                'email': "", }
-
-        form = AdminActionForm(data, current_user=user)
-        self.assertFalse(form.is_valid())
+    def test_ensure_action_choice_is_required(self):
+        data = {
+            'note': '',
+            'first_name': 'Bob',
+            'last_name': 'Smith',
+            'email': 'bobs@pdx.edu',
+        }
+        form = AdminActionForm(data, current_user=create_staff())
+        is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('action_choice', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['action_choice']))
 
     def test_clean_no_errors(self):
 
