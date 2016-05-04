@@ -21,8 +21,6 @@ urlpatterns = [
     url(r'^accounts/login/$', 'arcutils.cas.views.login', name='login'),
     url(r'^accounts/logout/$', 'arcutils.cas.views.logout', name='logout'),
     url(r'^accounts/validate/$', 'arcutils.cas.views.validate', name='cas-validate'),
-
-    url(r'^cloak/', include('cloak.urls')),
 ]
 
 

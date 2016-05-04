@@ -17,7 +17,6 @@ setup(
         'django>=1.8.12,<1.9',
         'django-arcutils[ldap]>=2.9.1',
         'django-bootstrap-form>=3.2',
-        'django-cloak',
         'django-local-settings>=1.0a20',
         'django_pgcli>=0.0.2',
         'psycopg2>=2.6.1',
