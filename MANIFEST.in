@@ -2,4 +2,3 @@ include CHANGELOG.md
 include README.md
 recursive-include lostandfound/static *
 recursive-include lostandfound/templates *
-recursive-include lostandfound/*/templates *
