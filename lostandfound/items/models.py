@@ -66,9 +66,10 @@ class Location(models.Model):
 
     location_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
+    long_name = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return '{self.name} - {self.long_name}'.format(**locals())
 
 
 class Category(models.Model):
