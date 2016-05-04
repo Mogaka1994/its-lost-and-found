@@ -77,7 +77,7 @@ class AdminActionForm(forms.Form):
             'description': item.description
         }
 
-        message = render_to_string('items/checkout_email.txt', ctx)
+        message = render_to_string('items/emails/checkout.txt', ctx)
 
         EmailMessage(subject, message, to=to, from_email=from_email).send()
 
@@ -303,7 +303,7 @@ class CheckInForm(ModelForm):
         subject = 'Valuable item checked in'
         to = settings.ITS.CHECKIN_EMAIL_TO
         from_email = settings.ITS.CHECKIN_EMAIL_FROM
-        message = render_to_string('items/checkin_email.txt', {'item': item})
+        message = render_to_string('items/emails/checkin.txt', {'item': item})
         EmailMessage(subject, message, to=to, from_email=from_email).send()
 
     def user_checkin_email(self, item, possible_owner):
@@ -312,11 +312,11 @@ class CheckInForm(ModelForm):
         to = [possible_owner.email]
         from_email = settings.ITS.CHECKIN_EMAIL_FROM
         if item.category.machine_name == Category.USB:
-            template = 'items/user_checkin_email_usb.txt'
+            template = 'items/emails/user_checkin_usb.txt'
         elif item.category.machine_name == Category.ID:
-            template = 'items/user_checkin_email_id.txt'
+            template = 'items/emails/user_checkin_id.txt'
         else:
-            template = 'items/user_checkin_email_all_other.txt'
+            template = 'items/emails/user_checkin_all_other.txt'
         message = render_to_string(template, {'item': item})
         EmailMessage(subject, message, to=to, from_email=from_email).send()
 
