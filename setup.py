@@ -27,7 +27,6 @@ setup(
             'psu.oit.arc.tasks',
             'coverage',
             'flake8',
-            'mock',
             'model-mommy',
         ]
     },
