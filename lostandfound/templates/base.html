@@ -52,7 +52,7 @@
                                     <span class="caret"></span>
                                 </a>
                                 <ul class="dropdown-menu">
-                                    {% if user.is_staff %}
+                                    {% if user.is_staff or user.is_superuser %}
                                         <li><a href="{% url 'admin:index' %}">Admin</a></li>
                                     {% endif %}
                                     <li><a href="{% url 'logout' %}">Logout</a></li>
