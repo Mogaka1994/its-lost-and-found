@@ -1,9 +1,9 @@
 from django.conf.urls import include, url
-from django.contrib import admin
 from django.http import HttpResponseServerError
 from django.template import loader
 from django.views.decorators.csrf import requires_csrf_token
 
+from arcutils import admin
 from arcutils.cas import views as cas_views
 
 from .items import views as items
@@ -25,7 +25,7 @@ urlpatterns = [
     url(r'^accounts/logout/$', cas_views.logout, name='logout'),
     url(r'^accounts/validate/$', cas_views.validate, name='cas-validate'),
 
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.cas_site.urls)),
 ]
 
 
