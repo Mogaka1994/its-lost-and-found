@@ -1,18 +1,16 @@
 language: python
+
 python:
   - "3.3"
+  - "3.4"
+
 sudo: false
-# command to install dependencies
+
+addons:
+    - postgresql: "9.4"
+
 install:
-  - cp variables.travis.py variables.py
-  - |
-    make init <<<"Joe
-    Doe
-    joe@example.com
-    joe
-    "
-# command to run tests
-script: make test
-# Spam the IRC channel yay!
-notifications:
-  irc: "irc.cat.pdx.edu#arc"
+    - pip install -r requirements.txt
+
+script:
+    - LOCAL_SETTINGS_FILE="local.base.cfg#test" python manage.py test

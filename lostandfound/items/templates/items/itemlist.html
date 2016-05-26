@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Items</h2>
+
+    <form method="get" action="" class="form-inline">
+        {{ item_filter.items|bootstrap }}
+        {{ item_filter.category|bootstrap }}
+        {{ item_filter.location|bootstrap }}
+        {{ item_filter.sort_by|bootstrap }}
+        {{ item_filter.keyword_or_last_name|bootstrap }}
+        <div class="form-group">
+            <label class="control-label">&nbsp;</label>
+            <div>
+                <input type="submit" class="btn btn-primary" name="action" value="Filter">
+                <a href="{% url 'admin-itemlist' %}" class="btn btn-default">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    {% if items %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>ID</th>
+                    <th>&nbsp;</th>
+                    <th>Found on</th>
+                    <th>Location</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Possible owner</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td><a href="{% url 'admin-action' item.pk %}">Return</a></td>
+                        <td>
+                            {{ item.item_id }}
+                        </td>
+                        <td>
+                            {% if item.is_valuable %}<span class="valuable-item" title="This item is valuable">$$$</span>{% endif %}
+                            {% if item.is_archived %}<span class="archived-item" title="This item has been archived">&#10003;</span>{% endif %}
+                            {% if not item.is_valuable and not item.is_archived %}-{% endif %}
+                        </td>
+                        <td>{{ item.found_on }}</td>
+                        <td>{{ item.location }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.possible_owner.get_full_name|default:'-' }}</td>
+                        <td>{{ item.last_status.action_taken }}</td>
+                    </tr>
+                {% endfor %}
+            <tbody>
+        </table>
+    {% else %}
+        <p class="alert alert-danger" style="margin-top: 20px;">
+            No items matching those filters were found.
+        </p>
+    {% endif %}
+{% endblock %}

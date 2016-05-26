@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>{% block error_title %}Error{% endblock %}</h2>
+    <div class="alert alert-danger">
+        {% block error_message %}
+            An unknown error occurred.
+        {% endblock %}
+    </div>
+{% endblock %}

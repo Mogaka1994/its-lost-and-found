@@ -1,0 +1,7 @@
+{% extends 'error.html' %}
+
+{% block error_title %}Authentication Required{% endblock %}
+
+{% block error_message %}
+    You must <a href="{% url 'login' %}">log in</a> to access {{ PROJECT.title }}.
+{% endblock %}

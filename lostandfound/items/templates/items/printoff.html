@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {# XXX: Is this directing the user who checked the item in to print this page or what? #}
+    <h1 class="hidden-print">Print this page</h1>
+    {% if item.is_valuable %}
+        <h1>Valuable Item</h1>
+    {% endif %}
+    {% include 'items/item_table.html' with exclude=True %}
+    <br>
+    <a class="hidden-print" href="{% url 'checkin' %}">Return to item check-in</a>
+{% endblock %}

@@ -1,8 +1,12 @@
-variables.py
+# Root
+/*.egg-info/
+/.env*/
+/media/
+/static/
+/tmp/
+/.coverage
+/local.cfg
+/local.*.cfg
+
+# Anywhere
 *.pyc
-.env
-media/*
-tmp/*
-.coverage
-htmlcov
-/static
