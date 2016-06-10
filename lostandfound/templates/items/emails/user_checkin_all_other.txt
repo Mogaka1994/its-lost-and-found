@@ -1,3 +1,25 @@
 Hello {{ item.possible_owner.get_full_name }},
 
-A lost and found item was turned in at the {{ item.location.name }} lab and we believe it may belong to you. Please come to the lab to claim the lost item. You will have to show photo ID and positively identify the item to retrieve it. Items valued over $50 or containing personal information are turned into the Campus Public Safety Office (CPSO) on the ground floor of Shattuck Hall as soon as possible. Due to storage limitations, unclaimed lost items valued under $50 are kept for a week following receipt. Following the one-week retention period, unclaimed items are then donated to a charitable organization. You may visit or contact our lab to see whether your valuable item has already been taken to CPSO by visiting pdx.edu/oit/labs and finding our phone number there. Please do not reply to this message.
+A lost and found item was turned in at the {{ item.location.long_name }} lab and we believe it may belong to you.
+
+To claim an item valued over $50 or containing personal information:
+1. Visit the Campus Public Safety Office (CPSO) on the ground floor of Shattuck Hall
+2. Bring photo ID to show CPSO
+3. Be able to accurately describe the item prior to pick up
+
+Note: USB Drives will never be turned in to CPSO
+
+To claim any other item:
+1. Go to {{ item.location.long_name }}
+2. Bring photo ID to show the lab attendant
+3. Be able to accurately describe the item prior to pick up
+
+Due to storage limitations, unclaimed lost items valued under $50 are kept for a week following reciept. Following the one-week retention period, unclaimed items are then donated to a charitable organization. You may visit our lab to see whether your valuable item has already been taken to CPSO.
+
+Please do not reply to this message.
+
+Office of Information Technology
+503-725-HELP
+pdx.edu/oit
+--------------------------------
+OIT will never ask for your password.

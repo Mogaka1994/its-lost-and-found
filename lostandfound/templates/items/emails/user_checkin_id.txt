@@ -1,3 +1,3 @@
 Hello {{ item.possible_owner.get_full_name }},
 
-A PSU ID card belonging to you was turned in as a lost item in the {{ item.location.name }} lab. Unclaimed PSU ID cards are taken to the ID Services window on the ground floor of Neuberger Hall as soon as possible. You may visit or contact our lab to see whether your card has already been taken to ID services by visiting pdx.edu/oit/labs and finding our phone number there. Please do not reply to this message.
+A PSU ID card belonging to you was turned in as a lost item in the {{ item.location.long_name }} lab. Unclaimed PSU ID cards are taken to the ID Services window on the ground floor of Neuberger Hall as soon as possible. You may visit or contact our lab to see whether your card has already been taken to ID services by visiting pdx.edu/oit/labs and finding our phone number there. Please do not reply to this message.
