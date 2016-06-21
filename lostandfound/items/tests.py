@@ -519,97 +519,76 @@ class AdminItemFilterFormTest(TestCase):
 
         # Test 1 - Valuable item / Search on location and category.
 
-        new_item1 = make(Item, is_archived=False, is_valuable=True)
-        new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
-        make(Status, action_taken=new_action, item=new_item1)
+    def test_get_valuable_at_location_in_category_with_keyword(self):
+        item = make(Item, description='Item', is_valuable=True)
+        make(Item, description='Non-matching item')
 
         data = {
             'items': 'valuable',
-            'location': new_item1.location.name,
-            'category': new_item1.category.name,
-            'keyword_or_last_name': new_item1.description,
-            'sort_by': '',
+            'location': item.location.pk,
+            'category': item.category.pk,
+            'keyword_or_last_name': item.description,
         }
 
-        item_filter_form = AdminItemFilterForm(data)
-        item_list = item_filter_form.filter()
-        values = item_list.values()
-        self.assertEqual(values.get()['item_id'], new_item1.pk)
+        form = AdminItemFilterForm(data)
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
-        # Test 2 - Archived item
-
-        new_item2 = make(Item, is_archived=True, is_valuable=True)
-
-        data = {
+    def test_get_archived(self):
+        item = make(Item, description='Item', is_archived=True)
+        make(Item, description='Non-matching item', is_archived=False)
+        form = AdminItemFilterForm({
             'items': 'archived',
-            'location': None,
-            'category': None,
-            'keyword_or_last_name': new_item2.description,
-            'sort_by': '',
-        }
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertEqual(values.get()['item_id'], new_item2.pk)
+    def test_get_valuable(self):
+        item = make(Item, description='Item', is_archived=False, is_valuable=True)
+        make(Item, description='Non-matching item', is_archived=True, is_valuable=False)
+        make(Item, description='Non-matching item', is_archived=False, is_valuable=False)
+        form = AdminItemFilterForm({
+            'items': 'valuable',
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
-        # Test 3 - not valuable, not archived item
-        new_item3 = make(Item, is_archived=False, is_valuable=False)
+    def test_order_by_location(self):
+        make(Item, _quantity=5, is_archived=False)
+        form = AdminItemFilterForm({
+            'sort_by': 'location',
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 5)
+        self.assertEqual(list(items), list(sorted(items, key=lambda i: i.location.name)))
 
-        data = {
-            'items': '',
-            'location': None,
-            'category': None,
-            'keyword_or_last_name': new_item3.description,
-            'sort_by': '',
-        }
-
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertEqual(values.get()['item_id'], new_item3.pk)
-
-        # Test 4 - test item sorting
-        make(Item, is_archived=False, is_valuable=False)
-
-        data = {
-            'items': '',
-            'location': None,
-            'category': None,
-            'keyword_or_last_name': '',
-            'sort_by': 'pk',
-        }
-
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertLess(values[0]['item_id'], values[1]['item_id'])
-            self.assertLess(values[1]['item_id'], values[2]['item_id'])
-
-        # Test 5 - Search on last name
+    def test_get_by_last_name(self):
         user = create_full_user('test', 'test', 'test@pdx.edu')
-        new_item5 = make(Item, is_archived=False, is_valuable=False, possible_owner=user)
-
-        data = {
-            'items': "",
-            'location': None,
-            'category': None,
+        item = make(Item, is_archived=False, is_valuable=False, possible_owner=user)
+        make(Item, _quantity=5, description='Non-matching item')
+        form = AdminItemFilterForm({
             'keyword_or_last_name': user.last_name,
-            'sort_by': '',
-        }
-
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertEqual(values.get()['item_id'], new_item5.pk)
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
 
 class ItemFilterFormTest (TestCase):

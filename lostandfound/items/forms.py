@@ -198,11 +198,11 @@ class AdminItemFilterForm(forms.Form):
 
             location = self.cleaned_data.get('location')
             if location:
-                filters['location'] = Location.objects.get(name=location).pk
+                filters['location'] = self.cleaned_data['location']
 
             category = self.cleaned_data.get('category')
             if category:
-                filters['category'] = Category.objects.get(name=category).pk
+                filters['category'] = self.cleaned_data['category']
 
             search_term = self.cleaned_data.get('keyword_or_last_name')
             if search_term:
