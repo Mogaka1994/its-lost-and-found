@@ -210,25 +210,27 @@ class CheckInFormTest(TestCase):
 
     fixtures = ['actions.json']
 
-    def test_clean_errors(self):
-        """Tests that the clean method does return errors when the form
-        is filled out incorrectly."""
+    def test_ensure_user_data_is_required_when_there_is_a_possible_owner(self):
         data = {
             'possible_owner_found': '1',
             'first_name': '',
             'last_name': '',
             'email': '',
-            'username': 'a'
+            'username': 'fakefakefakefakepantspantspantspantsxxxxxxxxxx',
         }
-        with patch('lostandfound.items.forms.ModelForm.clean', return_value=data):
-            with patch('lostandfound.items.forms.check_ldap', return_value=False):
-                with patch('lostandfound.items.forms.CheckInForm.add_error') as add_error:
-                    form = CheckInForm()
-                    form.clean()
-                    add_error.assert_any_call_with('first_name', 'First name required')
-                    add_error.assert_any_call_with('last_name', 'Last name required')
-                    add_error.assert_any_call_with('email', 'Email required')
-                    add_error.assert_any_call_with('username', 'Invalid username, enter a valid username or leave blank.')
+        form = CheckInForm(data)
+        with patch('lostandfound.items.forms.check_ldap', return_value=False):
+            is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('first_name', errors)
+        self.assertIn('last_name', errors)
+        self.assertIn('email', errors)
+        self.assertIn('username', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['first_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['last_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['email']))
+        self.assertTrue(any('invalid' in e.lower() for e in errors['username']))
 
     def test_clean_no_errors(self):
         """Tests that the clean method does not return errors when the
@@ -517,97 +519,76 @@ class AdminItemFilterFormTest(TestCase):
 
         # Test 1 - Valuable item / Search on location and category.
 
-        new_item1 = make(Item, is_archived=False, is_valuable=True)
-        new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
-        make(Status, action_taken=new_action, item=new_item1)
+    def test_get_valuable_at_location_in_category_with_keyword(self):
+        item = make(Item, description='Item', is_valuable=True)
+        make(Item, description='Non-matching item')
 
         data = {
             'items': 'valuable',
-            'location': new_item1.location.name,
-            'category': new_item1.category.name,
-            'keyword_or_last_name': new_item1.description,
-            'sort_by': '',
+            'location': item.location.pk,
+            'category': item.category.pk,
+            'keyword_or_last_name': item.description,
         }
 
-        item_filter_form = AdminItemFilterForm(data)
-        item_list = item_filter_form.filter()
-        values = item_list.values()
-        self.assertEqual(values.get()['item_id'], new_item1.pk)
+        form = AdminItemFilterForm(data)
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
-        # Test 2 - Archived item
-
-        new_item2 = make(Item, is_archived=True, is_valuable=True)
-
-        data = {
+    def test_get_archived(self):
+        item = make(Item, description='Item', is_archived=True)
+        make(Item, description='Non-matching item', is_archived=False)
+        form = AdminItemFilterForm({
             'items': 'archived',
-            'location': None,
-            'category': None,
-            'keyword_or_last_name': new_item2.description,
-            'sort_by': '',
-        }
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertEqual(values.get()['item_id'], new_item2.pk)
+    def test_get_valuable(self):
+        item = make(Item, description='Item', is_archived=False, is_valuable=True)
+        make(Item, description='Non-matching item', is_archived=True, is_valuable=False)
+        make(Item, description='Non-matching item', is_archived=False, is_valuable=False)
+        form = AdminItemFilterForm({
+            'items': 'valuable',
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
-        # Test 3 - not valuable, not archived item
-        new_item3 = make(Item, is_archived=False, is_valuable=False)
+    def test_order_by_location(self):
+        make(Item, _quantity=5, is_archived=False)
+        form = AdminItemFilterForm({
+            'sort_by': 'location',
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 5)
+        self.assertEqual(list(items), list(sorted(items, key=lambda i: i.location.name)))
 
-        data = {
-            'items': '',
-            'location': None,
-            'category': None,
-            'keyword_or_last_name': new_item3.description,
-            'sort_by': '',
-        }
-
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertEqual(values.get()['item_id'], new_item3.pk)
-
-        # Test 4 - test item sorting
-        make(Item, is_archived=False, is_valuable=False)
-
-        data = {
-            'items': '',
-            'location': None,
-            'category': None,
-            'keyword_or_last_name': '',
-            'sort_by': 'pk',
-        }
-
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertLess(values[0]['item_id'], values[1]['item_id'])
-            self.assertLess(values[1]['item_id'], values[2]['item_id'])
-
-        # Test 5 - Search on last name
+    def test_get_by_last_name(self):
         user = create_full_user('test', 'test', 'test@pdx.edu')
-        new_item5 = make(Item, is_archived=False, is_valuable=False, possible_owner=user)
-
-        data = {
-            'items': "",
-            'location': None,
-            'category': None,
+        item = make(Item, is_archived=False, is_valuable=False, possible_owner=user)
+        make(Item, _quantity=5, description='Non-matching item')
+        form = AdminItemFilterForm({
             'keyword_or_last_name': user.last_name,
-            'sort_by': '',
-        }
-
-        with patch('lostandfound.items.forms.AdminItemFilterForm.is_valid', return_value=True):
-            item_filter_form = AdminItemFilterForm(data)
-            item_filter_form.cleaned_data = data
-            item_list = item_filter_form.filter()
-            values = item_list.values()
-            self.assertEqual(values.get()['item_id'], new_item5.pk)
+        })
+        is_valid = form.is_valid()
+        self.assertEqual(is_valid, True)
+        items = form.filter()
+        self.assertEqual(items.count(), 1)
+        fetched_item = items.first()
+        self.assertEqual(fetched_item, item)
 
 
 class ItemFilterFormTest (TestCase):
@@ -694,63 +675,54 @@ class AdminActionFormTest (TestCase):
             self.assertEquals(len(mail.outbox), 1)
             self.assertEquals(mail.outbox[0].subject, 'Valuable item checked out')
 
-    def test_clean_with_errors(self):
+    def test_ensure_user_data_is_required_when_returning_an_item(self):
+        # Test 1 - Ensure first name, last name, and email are required
+        # when returning an item.
+        data = {
+            'note': '',
+            'first_name': '',
+            'last_name': '',
+            'email': '',
+        }
+        form = AdminActionForm(data, current_user=create_user())
+        is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('first_name', errors)
+        self.assertIn('last_name', errors)
+        self.assertIn('email', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['first_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['last_name']))
+        self.assertTrue(any('required' in e.lower() for e in errors['email']))
 
-        """
-        Test 1 - Check that errors appear when returning item with bad data.
-        Test 2 - Check that errors appear when performing other action with bad data.
-        Test 3 - Check that errors appear when action_choice is of type None.
-        """
+    def test_ensure_note_is_required_for_other_action(self):
+        data = {
+            'action_choice': Action.objects.get(machine_name=Action.OTHER).pk,
+            'note': '',
+            'first_name': '',
+            'last_name': '',
+            'email': '',
+        }
+        form = AdminActionForm(data, current_user=create_staff())
+        is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('note', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['note']))
 
-        # Test 1 - Check for errors when returning item.
-        user = create_staff()
-
-        new_action = Action.objects.get(machine_name=Action.RETURNED)
-
-        data = {'action_choice': new_action,
-                'note': "",
-                'first_name': "",
-                'last_name': "",
-                'email': "", }
-
-        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
-                with patch("lostandfound.items.forms.AdminActionForm.add_error") as add_error:
-                    form = AdminActionForm(data, current_user=user)
-                    form.clean()
-
-                    add_error.assert_any_call_with("first_name", "First name is required when returning item.")
-                    add_error.assert_any_call_with("last_name", "Last name is required when returning item.")
-                    add_error.assert_any_call_with("email", "Email is required when returning item.")
-
-        # Test 2 - Check for errors when selecting other action.
-
-        new_action = Action.objects.get(machine_name=Action.OTHER)
-
-        data = {'action_choice': new_action,
-                'note': "",
-                'first_name': "",
-                'last_name': "",
-                'email': "", }
-
-        with patch('lostandfound.items.forms.AdminActionForm.clean', return_value=data):
-                with patch("lostandfound.items.forms.AdminActionForm.add_error") as add_error:
-                    form = AdminActionForm(data, current_user=user)
-                    form.clean()
-
-                    add_error.assert_any_call_with("note", "Note required when choosing action of type Other.")
-
-        # Test 3 - Check for errors when action_choice not in dictionary.
-        # Failed as NoneType AttributeError for machine_name in clean on old code.
-        user = create_user()
-
-        data = {'action_choice': None,
-                'note': "",
-                'first_name': "",
-                'last_name': "",
-                'email': "", }
-
-        form = AdminActionForm(data, current_user=user)
-        self.assertFalse(form.is_valid())
+    def test_ensure_action_choice_is_required(self):
+        data = {
+            'note': '',
+            'first_name': 'Bob',
+            'last_name': 'Smith',
+            'email': 'bobs@pdx.edu',
+        }
+        form = AdminActionForm(data, current_user=create_staff())
+        is_valid = form.is_valid()
+        errors = form.errors
+        self.assertFalse(is_valid)
+        self.assertIn('action_choice', errors)
+        self.assertTrue(any('required' in e.lower() for e in errors['action_choice']))
 
     def test_clean_no_errors(self):
 

@@ -50,7 +50,13 @@
                         <td>{{ item.category }}</td>
                         <td>{{ item.description }}</td>
                         <td>{{ item.possible_owner.get_full_name|default:'-' }}</td>
-                        <td>{{ item.last_status.action_taken }}</td>
+                        <td>
+                            {{ item.last_status.action_taken }}
+                            <a href="{% url 'itemstatus' item.pk %}" title="Show status log">
+                                <span class="glyphicon glyphicon-info-sign"></span>
+                                <span class="sr-only">Show status log</span>
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
             <tbody>

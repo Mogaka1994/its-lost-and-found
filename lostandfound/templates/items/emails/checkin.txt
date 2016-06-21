@@ -1,7 +1,7 @@
 The following item was found:
 
 Found on: {{ item.found_on }}
-Found in: {{ item.location.name }}
+Found in: {{ item.location.long_name }}
 Found by: {{ item.found_by }}
 Category: {{ item.category.name }}
 Description: {{ item.description }}

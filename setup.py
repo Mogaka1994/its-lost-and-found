@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 
-VERSION = '1.0.0'
+VERSION = '1.2.0'
 
 
 setup(
@@ -14,21 +14,19 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'django>=1.8.12,<1.9',
-        'django-arcutils[ldap]>=2.9.1',
-        'django-bootstrap-form>=3.2',
-        'django-cloak',
+        'django>=1.9.7',
+        'django-arcutils[ldap]>=2.10.0',
+        'django-bootstrap-form>=3.2.1',
         'django-local-settings>=1.0a20',
         'django_pgcli>=0.0.2',
         'psycopg2>=2.6.1',
-        'pytz>=2016.3',
+        'pytz>=2016.4',
     ],
     extras_require={
         'dev': [
             'psu.oit.arc.tasks',
             'coverage',
             'flake8',
-            'mock',
             'model-mommy',
         ]
     },
