@@ -1,8 +1,18 @@
 # Change log for ITS Lost and Found
 
-## 1.1.0 - unreleased
+## 1.1.0 - 2016-06-20
 
-In progress...
+###Added
+
+- Added an item status log page for non-admin users. This page was
+  previously only available to admins and always included the admin
+  actions form.
+
+##Changed
+
+- Changed the email text for possible owner notifications to be more
+  informative including using the location's long name.
+
 
 
 ## 1.0.0 - 2016-05-02
