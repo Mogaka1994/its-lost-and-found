@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Item Info</h3>
+
+            {% include 'items/item_table.html' %}
+
+            <h3>Status Log</h3>
+
+            <table class="table table-condensed table-striped">
+                <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Timestamp</th>
+                    <th>Performed by</th>
+                    <th>Notes</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for status in status_list %}
+                    <tr>
+                        <td>{{ status.action_taken }}</td>
+                        <td>{{ status.timestamp }}</td>
+                        <td>{{ status.performed_by.get_full_name }}</td>
+                        <td>{{ status.note }}</td></tr>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% block admin-action %}
+        {% endblock %}
+    </div>
+{% endblock %}

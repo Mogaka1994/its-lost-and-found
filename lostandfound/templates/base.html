@@ -12,89 +12,79 @@
 
     <body>
         {% block body %}
-            {% if user.is_cloaked %}
-                <div class="alert alert-danger" id="mask-alert">
-                    <strong class="text-danger">You are masquerading as {{ user }}</strong>
-                    <form method="post" action="{% url 'uncloak' %}" style="display: inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ on_uncloak_goto }}">
-                        <input type="submit" name="submit" value="Un-masquerade" class="btn btn-danger btn-xs">
-                    </form>
-                </div>
-            {% endif %}
-
-            <div class="{% if user.is_cloaked %}cloak-pushdown{% endif %}">
-                <div class="container-fluid hidden-print" id="header">
-                    <div class="row">
-                        <div class="col-xs-6">
-                            <a href="http://www.pdx.edu/">
-                                <img src="{% static 'img/logo.png' %}" alt="PSU home page">
-                            </a>
-                        </div>
-                        <div class="col-xs-6 text-right">
-                            <h2><a href="/">{{ PROJECT.title }}</a></h2>
-                        </div>
+            <div class="container-fluid hidden-print" id="header">
+                <div class="row">
+                    <div class="col-xs-6">
+                        <a href="http://www.pdx.edu/">
+                            <img src="{% static 'img/logo.png' %}" alt="PSU home page">
+                        </a>
+                    </div>
+                    <div class="col-xs-6 text-right">
+                        <h2><a href="/">{{ PROJECT.title }}</a></h2>
                     </div>
                 </div>
+            </div>
 
-                <nav class="navbar navbar-default">
-                    <div class="container-fluid">
-                        <ul class="nav navbar-nav">
+            <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="{% url 'home' %}">
+                                <span class="glyphicon glyphicon-home"></span>
+                                Home
+                            </a>
+                        </li>
+                        {% if user.is_active %}
+                            <li><a href="{% url 'index' %}">Checkin</a></li>
+                            <li><a href="{% url 'itemlist' %}">Items</a></li>
+                            {% if user.is_staff %}
+                                <li><a href="{% url 'admin-itemlist' %}">Administration</a></li>
+                            {% endif %}
+                        {% endif %}
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        {% if user.is_authenticated %}
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <span class="glyphicon glyphicon-user"></span>
+                                    {{ user.get_full_name }}
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    {% if user.is_staff or user.is_superuser %}
+                                        <li><a href="{% url 'admin:index' %}">Admin</a></li>
+                                    {% endif %}
+                                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                                </ul>
+                            </li>
+                        {% else %}
                             <li>
                                 <a href="{% url 'home' %}">
-                                    <span class="glyphicon glyphicon-home"></span>
-                                    Home
+                                    <span class="glyphicon glyphicon-log-in"></span>
+                                    Login
                                 </a>
                             </li>
-                            {% if user.is_active %}
-                                <li><a href="{% url 'index' %}">Checkin</a></li>
-                                <li><a href="{% url 'itemlist' %}">Items</a></li>
-                                {% if user.is_staff %}
-                                    <li><a href="{% url 'admin-itemlist' %}">Administration</a></li>
-                                {% endif %}
-                            {% endif %}
-                        </ul>
-
-                        <ul class="nav navbar-nav navbar-right">
-                            {% if user.is_authenticated %}
-                                <li class="dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                        <span class="glyphicon glyphicon-user"></span>
-                                        {{ user.get_full_name }}
-                                        <span class="caret"></span>
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a href="{% url 'logout' %}">Logout</a></li>
-                                    </ul>
-                                </li>
-                            {% else %}
-                                <li>
-                                    <a href="{% url 'home' %}">
-                                        <span class="glyphicon glyphicon-log-in"></span>
-                                        Login
-                                    </a>
-                                </li>
-                            {% endif %}
-                        </ul>
-                    </div>
-                </nav>
-
-                <div class="container-fluid" id="main">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div{% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
-                    {% block content %}{% endblock %}
+                        {% endif %}
+                    </ul>
                 </div>
+            </nav>
 
-                <div class="footer">
-                    <div class="container-fluid text-center text-muted">
-                        <h6 class="hidden-print">Copyright &copy; {% now "Y" %}</h6>
-                    </div>
+            <div class="container-fluid" id="main">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div{% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %}>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+
+            <div class="footer">
+                <div class="container-fluid text-center text-muted">
+                    <h6 class="hidden-print">Copyright &copy; {% now "Y" %}</h6>
                 </div>
             </div>
         {% endblock %}

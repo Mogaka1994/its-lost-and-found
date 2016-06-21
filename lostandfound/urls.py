@@ -3,6 +3,9 @@ from django.http import HttpResponseServerError
 from django.template import loader
 from django.views.decorators.csrf import requires_csrf_token
 
+from arcutils import admin
+from arcutils.cas import views as cas_views
+
 from .items import views as items
 from .views import home
 
@@ -14,15 +17,16 @@ urlpatterns = [
     url(r'^items/checkin$', items.checkin, name='checkin'),
     url(r'^items/admin-itemlist$', items.admin_itemlist, name='admin-itemlist'),
     url(r'^items/itemlist$', items.itemlist, name='itemlist'),
+    url(r'^items/itemstatus/(?P<item_num>\d+)/$', items.itemstatus, name='itemstatus'),
     url(r'^items/autocomplete/?$', items.autocomplete, name='users-autocomplete'),
     url(r'^items/(?P<item_id>\d+)/$', items.printoff, name='printoff'),
 
     # CAS Authentication
-    url(r'^accounts/login/$', 'arcutils.cas.views.login', name='login'),
-    url(r'^accounts/logout/$', 'arcutils.cas.views.logout', name='logout'),
-    url(r'^accounts/validate/$', 'arcutils.cas.views.validate', name='cas-validate'),
+    url(r'^accounts/login/$', cas_views.login, name='login'),
+    url(r'^accounts/logout/$', cas_views.logout, name='logout'),
+    url(r'^accounts/validate/$', cas_views.validate, name='cas-validate'),
 
-    url(r'^cloak/', include('cloak.urls')),
+    url(r'^admin/', include(admin.cas_site.urls)),
 ]
 
 

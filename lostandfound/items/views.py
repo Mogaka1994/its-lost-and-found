@@ -92,6 +92,21 @@ def itemlist(request):
 
 
 @login_required
+def itemstatus(request, item_num):
+    """Non-administrative item status page.
+
+    Can view status and information about an item.
+
+    """
+    chosen_item = get_object_or_404(Item, pk=item_num)
+    status_list = Status.objects.filter(item=item_num)
+    return render(request, 'items/itemstatus.html', {
+        'item': chosen_item,
+        'status_list': status_list,
+    })
+
+
+@login_required
 def checkin(request):
     """Item check in form.
 
