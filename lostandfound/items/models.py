@@ -119,20 +119,35 @@ class Item(models.Model):
     returned_to = models.ForeignKey(AUTH_USER_MODEL, related_name='item_returned_to', null=True)
 
     @property
+    def status_count(self):
+        """Get the number of statuses recorded for this item.
+
+        Returns:
+            int: The number of statuses
+
+        """
+        return self.status_set.count()
+
+    @property
     def first_status(self):
-        return self.status_set.all()[self.status_set.count() - 1]
+        status_count = self.status_count
+        if status_count > 0:
+            return self.status_set.all()[status_count - 1]
 
     @property
     def last_status(self):
-        return self.status_set.all()[0]
+        if self.status_count > 0:
+            return self.status_set.all()[0]
 
     @property
     def found_on(self):
-        return self.first_status.timestamp
+        if self.first_status is not None:
+            return self.first_status.timestamp
 
     @property
     def found_by(self):
-        return self.first_status.performed_by
+        if self.first_status is not None:
+            return self.first_status.performed_by
 
     def __str__(self):
         return self.description
