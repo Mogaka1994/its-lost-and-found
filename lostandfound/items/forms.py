@@ -65,7 +65,7 @@ class AdminActionForm(forms.Form):
         """Send an email to all the admins when a valuable item is checked out."""
         subject = 'Valuable item checked out'
         to = settings.ITS.CHECKOUT_EMAIL_TO
-        from_email = settings.ITS.CHECKOUT_EMAIL_FROM
+        from_email = settings.DEFAULT_FROM_EMAIL
 
         ctx = {
             'found_on': str(item.found_on),
@@ -302,7 +302,7 @@ class CheckInForm(ModelForm):
         """Send an email to all the admins when a valuable item is checked in."""
         subject = 'Valuable item checked in'
         to = settings.ITS.CHECKIN_EMAIL_TO
-        from_email = settings.ITS.CHECKIN_EMAIL_FROM
+        from_email = settings.DEFAULT_FROM_EMAIL
         message = render_to_string('items/emails/checkin.txt', {'item': item})
         EmailMessage(subject, message, to=to, from_email=from_email).send()
 
@@ -310,7 +310,7 @@ class CheckInForm(ModelForm):
         """Send an email to a possible owner when an item they own is checked in."""
         subject = 'An item belonging to you was found'
         to = [possible_owner.email]
-        from_email = settings.ITS.CHECKIN_EMAIL_FROM
+        from_email = settings.DEFAULT_FROM_EMAIL
         if item.category.machine_name == Category.USB:
             template = 'items/emails/user_checkin_usb.txt'
         elif item.category.machine_name == Category.ID:
