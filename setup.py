@@ -15,7 +15,6 @@ setup(
     zip_safe=False,
     install_requires=[
         'django>=1.9.7',
-        'ldap3<2.0',
         'django-arcutils[ldap]>=2.10.0',
         'django-bootstrap-form>=3.2.1',
         'django-local-settings>=1.0a20',
