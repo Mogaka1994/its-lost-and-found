@@ -1,5 +1,10 @@
 # Change log for ITS Lost and Found
 
+## 1.3.0 - 2016-12-20
+
+In progress...
+
+
 ## 1.2.0 - 2016-06-21
 
 ### Changed
