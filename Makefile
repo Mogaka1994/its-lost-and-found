@@ -7,8 +7,8 @@ arctasks = $(venv)/lib/$(venv_python)/site-packages/arctasks/__init__.py
 # for bootstrapping purposes and then delegates to the arctasks init
 # task to do the actual initialization.
 init: $(venv) local.dev.cfg local.test.cfg $(arctasks)
-	$(bin)/inv init --overwrite
-	$(bin)/inv test
+	$(bin)/run init --overwrite
+	$(bin)/run test
 
 reinit: clean-egg-info clean-pyc clean-venv init
 
@@ -29,16 +29,16 @@ clean-venv:
 	rm -rf $(venv)
 
 test:
-	$(bin)/inv test
+	$(bin)/run test
 test-all:
-	QT_TEST_SUBMIT_TICKETS="1" $(bin)/inv test
+	QT_TEST_SUBMIT_TICKETS="1" $(bin)/run test
 
 run:
-	$(bin)/inv runserver
+	$(bin)/run runserver
 
 to ?= stage
 deploy:
-	$(bin)/inv --echo configure --env $(to) deploy
+	$(bin)/run --echo configure --env $(to) deploy
 
 clean: clean-pyc
 clean-all: clean-build clean-dist clean-egg-info clean-pyc clean-venv
