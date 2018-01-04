@@ -1,13 +1,12 @@
 # Change log for ITS Lost and Found
 
-## 1.4.0 - unreleased
-
-In progress...
-
+## 1.4.0 - 2018-01-03
+- Update Django to 1.11
+- Modernize for newer arctasks and arcutils versions
+- Use WDT ldap group (instead of ARC) when applying developer staff access
 
 ## 1.3.0 - 2016-12-20
 
-In progress...
 
 
 ## 1.2.0 - 2016-06-21

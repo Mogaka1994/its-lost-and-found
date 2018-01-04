@@ -36,8 +36,8 @@ class ITSCASModelBackend(CASModelBackend):
             user.is_active = True
             user.is_staff = True
 
-        # Automatically add ARC staff as staff & superusers in this app
-        query = '(& (memberuid={uid}) (cn=arc))'.format(uid=uid)
+        # Automatically add WDT staff as staff & superusers in this app
+        query = '(& (memberuid={uid}) (cn=wdt))'.format(uid=uid)
         results = ldapsearch(query)
         if results:
             user.is_active = True
