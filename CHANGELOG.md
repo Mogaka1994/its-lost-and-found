@@ -1,5 +1,10 @@
 # Change log for ITS Lost and Found
 
+## 1.5.0 - unreleased
+
+In progress...
+
+
 ## 1.4.0 - 2018-01-03
 - Update Django to 1.11
 - Modernize for newer arctasks and arcutils versions
