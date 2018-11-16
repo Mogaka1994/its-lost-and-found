@@ -77,7 +77,8 @@ class Category(models.Model):
     class Meta:
         db_table = 'category'
         ordering = ['name']
-
+        verbose_name_plural = "categories"
+        
     BOOK = 'BOOK'
     CLOTHING = 'CLOTHING'
     GLASSES = 'GLASSES'

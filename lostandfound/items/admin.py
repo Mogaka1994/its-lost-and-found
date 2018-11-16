@@ -1,6 +1,12 @@
-from arcutils import admin
+from django.contrib import admin
+from arcutils import admin as arc_admin
 
 from .models import Location
+from .models import Category
 
 
-admin.cas_site.register(Location)
+class CategoryAdmin(admin.ModelAdmin):
+    exclude = ('machine_name',)
+
+arc_admin.cas_site.register(Location)
+arc_admin.cas_site.register(Category, CategoryAdmin)
