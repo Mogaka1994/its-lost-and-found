@@ -1,0 +1,50 @@
+<div class="container widget">
+  <div class="widget-wrapper">
+    <div class="widget--label--cell border">
+      <span class="widget--label">LOST</span>
+    </div>
+    <div class="widget--label--cell">
+      <span class="widget--label">FOUND</span>
+    </div>
+    <div class="widget--value--cell border">
+      <div class="widget--value">
+        {{ checked_in_today }}
+      </div>
+      <div class="widget--value">
+        {{ checked_in_this_year }}
+      </div>
+      <div class="widget--value">
+        {{ checked_in_by_me }}
+      </div>
+      <div class="widget--value--label">
+        Today
+      </div>
+      <div class="widget--value--label">
+        {% now 'Y' %}
+      </div>
+      <div class="widget--value--label">
+        Me <small>(all time)</small>
+      </div>
+    </div>
+    <div class="widget--value--cell">
+      <div class="widget--value">
+        {{ returned_today }}
+      </div>
+      <div class="widget--value">
+        {{ returned_this_year }}
+      </div>
+      <div class="widget--value">
+        {{ returned_by_me }}
+      </div>
+      <div class="widget--value--label">
+        Today
+      </div>
+      <div class="widget--value--label">
+        {% now 'Y' %}
+      </div>
+      <div class="widget--value--label">
+        Me <small>(all time)</small>
+      </div>
+    </div>
+  </div> <!-- end widget-wrapper-->
+</div>

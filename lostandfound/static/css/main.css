@@ -98,3 +98,57 @@ body {
     background-color: #516300;
     border-color: #dbe2bc;
 }
+
+/* home page/status widget */
+
+.container.widget {
+  min-height: 70vh;
+  margin: auto;
+}
+
+.widget-wrapper {
+  display: grid;
+  margin: auto;
+  grid-template-columns: 50% 50%;
+  grid-template-rows: 10% 1fr;
+  max-width: 85vw;
+  margin: 30px auto;
+  border: 3px solid #a1a1a1;
+  border-radius: 2px;
+}
+
+.widget-wrapper div.border {
+  border-right: 3px solid #a1a1a1;
+}
+
+.widget--label--cell {
+  padding-top: 3px;
+}
+
+.widget--label {
+    text-align: center;
+    background: #333;
+    padding: 5px 32px;
+    font-size: 18px;
+    font-weight: lighter;
+    color: white;
+    margin-top: 3px;
+}
+
+.widget--value--cell {
+  display: grid;
+  grid-template-rows: 50% 50%;
+  grid-template-columns: 33% 33% 33%;
+  padding: 20px 20px;
+  text-align: center;
+}
+
+
+.widget--value {
+  font-size: 36px;
+  font-weight: bold;
+}
+
+.widget--value--label {
+  font-size: 22px;
+}
