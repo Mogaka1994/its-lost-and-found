@@ -470,31 +470,6 @@ class ItemArchiveFormTest(TestCase):
         new_item = Item.objects.get(pk=new_item.pk)
         self.assertTrue(new_item.is_archived)
 
-    def test_iter(self):
-
-        """
-        Checks that the iter method updates the requested page with the correct archive fields.
-        """
-
-        user = create_staff()
-        self.client.login(username=user.username, password="password")
-
-        new_item = make(Item, is_archived=False)
-        new_action = Action.objects.get(machine_name=Action.CHECKED_IN)
-        make(Status, action_taken=new_action, item=new_item)
-        make(Category)
-        make(Location)
-
-        request = self.client.post(reverse("admin-itemlist"))
-
-        item_filter_form = AdminItemFilterForm(None)
-        item_filter_form.filter()
-
-        request = self.client.get(reverse("admin-itemlist"))
-
-        expected_text = "archive-" + str(new_item.pk)
-        self.assertContains(request, expected_text, status_code=200, html=False)
-
 
 class AdminItemFilterFormTest(TestCase):
 

@@ -2,79 +2,88 @@
 
 {% block content %}
     <h2>Admin Items</h2>
-
-    <form method="get" action="" class="form-inline">
-        {{ item_filter.items|bootstrap }}
-        {{ item_filter.category|bootstrap }}
-        {{ item_filter.location|bootstrap }}
-        {{ item_filter.sort_by|bootstrap }}
-        {{ item_filter.keyword_or_last_name|bootstrap }}
-        <div class="form-group">
-            <label class="control-label">&nbsp;</label>
+        <form method="get" action="" class="form-inline">
+          {{ item_filter.items|bootstrap }}
+          {{ item_filter.category|bootstrap }}
+          {{ item_filter.location|bootstrap }}
+          {{ item_filter.status|bootstrap }}
+          {{ item_filter.year|bootstrap }}
+          {{ item_filter.keyword_or_last_name|bootstrap }}
+          <div class="form-group">
+             <label class="control-label">&nbsp;</label>
             <div>
-                <input type="submit" class="btn btn-primary" name="action" value="Filter">
-                <a href="{% url 'admin-itemlist' %}" class="btn btn-default">Reset</a>
-            </div>
-        </div>
-    </form>
+              <input type="submit" class="btn btn-primary" name="action" value="Filter">
+              <a href="{% url 'admin-itemlist' %}" class="btn btn-default">Reset</a>
+             </div>
+           </div>
+         </form>
+         {% if item_list %}
+         <div class="loader">
+           <img src="{% static 'img/spinner.svg' %}" alt="Loader">
+         </div>
+        <form method="post" action="" class='loading'>
+          {% csrf_token %}
+          <table class="table table-striped" id='admin-table'>
+            <thead>
+              <tr>
+                <th>&nbsp;</th>
+                <th>Found on</th>
+                <th>Found by</th>
+                <th>Location</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Valuable</th>
+                <th>Current status</th>
+                <th>Last updated on</th>
+                <th class="text-center">
+                  Archive
+                  <input type="checkbox" id="select_all"
+                         name="select_all" value="">
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in item_list %}
+                <tr>
+                  <td>
+                    <a class='btn btn-default btn-sm'
+                       href="{% url 'admin-action' item.pk %}"
+                       title="Update {{ item.item_id }}">
+                        Update
+                    </a>
+                  </td>
+                  <td>{{ item.found_on }}</td>
+                  <td>{{ item.found_by.get_full_name }}</td>
+                  <td>{{ item.location }}</td>
+                  <td>{{ item.category }}</td>
+                  <td>{{ item.description }}</td>
+                  <td>{{ item.is_valuable|yesno|title }}</td>
+                  <td>
+                    {{ item.last_status.action_taken|default:'-' }}
+                  </td>
+                  <td>
+                    {{ item.last_status.timestamp|default:'-' }}
+                  </td>
 
-    {% if items %}
-        <form method="post" action="">
-            {% csrf_token %}
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>&nbsp;</th>
-                        <th>ID</th>
-                        <th>&nbsp;</th>
-                        <th>Found on</th>
-                        <th>Found by</th>
-                        <th>Location</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Valuable</th>
-                        <th>Possible owner</th>
-                        <th>Returned to</th>
-                        <th>Last action</th>
-                        <th>Last action performed on</th>
-                        <th>Last action notes</th>
-                        <th>Last action taken by</th>
-                        <th class="text-center">
-                            Archive
-                            <input type="checkbox" name="select_all" value="" id="select_all">
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for item, field in archive_form %}
-                    <tr>
-                        <td><a href="{% url 'admin-action' item.pk %}">Action</a></td>
-                        <td>
-                            {{ item.item_id }}
-                        </td>
-                        <td>
-                            {% if item.is_valuable %}<span class="valuable-item" title="This item is valuable">$$$</span>{% endif %}
-                            {% if item.is_archived %}<span class="archived-item" title="This item has been archived">&#10003;</span>{% endif %}
-                            {% if not item.is_valuable and not item.is_archived %}-{% endif %}
-                        </td>
-                        <td>{{ item.found_on }}</td>
-                        <td>{{ item.found_by.get_full_name }}</td>
-                        <td>{{ item.location }}</td>
-                        <td>{{ item.category }}</td>
-                        <td>{{ item.description }}</td>
-                        <td>{{ item.is_valuable|yesno|title }}</td>
-                        <td>{{ item.possible_owner.get_full_name|default:'-' }}</td>
-                        <td>{{ item.returned_to.get_full_name|default:'-' }}</td>
-                        <td>{{ item.last_status.action_taken }}</td>
-                        <td>{{ item.last_status.timestamp }}</td>
-                        <td>{{ item.last_status.note|default:'-' }}</td>
-                        <td>{{ item.last_status.performed_by.get_full_name|default:'-' }}</td>
-                        <td class="text-center">{{ field }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            <input type="submit" name="action" class="btn btn-primary pull-right" value="Archive selected items">
+                  <td class="text-center">
+                    {% if item.is_archived %}
+                      &check;
+                    {% else %}
+                      <input type="checkbox" name="archive-{{ item.pk }}"
+                           class="checkbox_archive"
+                           id="id_archive-{{ item.pk }}">
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+          </table>
+          <div class='col-md-12'>
+            <input type="submit" name="action"
+                   class="btn btn-primary pull-right"
+                   value="Archive selected items">
+            </input>
+          </div>
         </form>
     {% else %}
         <p class="alert alert-danger" style="margin-top: 20px;">
@@ -86,4 +95,23 @@
 {% block js %}
     {{ block.super }}
     <script src="{% static 'js/admin-itemlist.js' %}"></script>
+    <script src="//cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+    <script>
+      $(document).ready(function () {
+          $('#admin-table').DataTable({
+            "searching": false,
+            "columnDefs": [
+              { "orderable": false, "targets": 0 }
+            ],
+            "initComplete": function() {
+              $('form.loading').addClass('loaded');
+              $('form.loading').removeClass('loading');
+              $('.loader').addClass('hidden');
+            }
+          });
+          $('#show').change(function (e) {
+            $(this).parent('form').submit();
+          });
+      });
+    </script>
 {% endblock %}

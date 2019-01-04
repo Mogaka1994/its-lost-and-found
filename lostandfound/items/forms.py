@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -5,6 +7,7 @@ from django.core.mail import EmailMessage
 from django.db.models import Q
 from django.forms import ModelForm
 from django.template.loader import render_to_string
+from django.core.exceptions import ObjectDoesNotExist
 
 from arcutils.ldap import escape, ldapsearch
 
@@ -42,10 +45,12 @@ def create_user(first_name, last_name, email):
 
 
 class AdminActionForm(forms.Form):
+    """
+    Form used on the admin-action page.
+    """
 
-    """Form used on the admin-action page."""
-
-    action_choice = forms.ModelChoiceField(queryset=Action.objects.all(), empty_label=None)
+    action_choice = forms.ModelChoiceField(
+        queryset=Action.objects.all(), empty_label=None)
     note = forms.CharField(widget=forms.Textarea, required=False)
     first_name = forms.CharField(required=False)
     last_name = forms.CharField(required=False)
@@ -62,7 +67,9 @@ class AdminActionForm(forms.Form):
             self.fields.pop('action_choice')
 
     def checkout_email(self, item):
-        """Send an email to all the admins when a valuable item is checked out."""
+        """
+        Send an email to all the admins when a valuable item is checked out.
+        """
         subject = 'Valuable item checked out'
         to = settings.ITS.CHECKOUT_EMAIL_TO
         from_email = settings.DEFAULT_FROM_EMAIL
@@ -78,7 +85,6 @@ class AdminActionForm(forms.Form):
         }
 
         message = render_to_string('items/emails/checkout.txt', ctx)
-
         EmailMessage(subject, message, to=to, from_email=from_email).send()
 
     def clean(self):
@@ -109,20 +115,22 @@ class AdminActionForm(forms.Form):
 
         if action == Action.OTHER:
             if not note:
-                self.add_error('note', 'Note required when choosing action of type Other.')
+                self.add_error(
+                    'note', 'Note required when choosing action of type Other.')
 
         return cleaned_data
 
     def save(self, *args, item_pk, current_user, **kwargs):
-        """If an item is being returned, create a new user for the
+        """
+        If an item is being returned, create a new user for the
         person the item is being returned to if they don't already
         exist. Then send an email to the staff mailing list if the item
         is valuable.
 
         If an item is being set to checked in, set it's returned_to
         field to None.
-
         """
+
         item = Item.objects.get(pk=item_pk)
         action_choice = self.cleaned_data['action_choice']
         first_name = self.cleaned_data.get('first_name')
@@ -171,7 +179,14 @@ class AdminItemFilterForm(forms.Form):
         ('archived', 'Archived only'),
         ('valuable', 'Valuable only'),
     )
+    years = [(None, '----')]
+    years += [
+        (x.year, str(x.year)) for x in Status.objects.dates('timestamp', 'year')
+    ]
 
+    status = forms.ModelChoiceField(
+        queryset=Action.objects.all(), required=False, label="Current status")
+    year = forms.ChoiceField(choices=years, required=False)
     location = forms.ModelChoiceField(queryset=Location.objects.all(), required=False)
     category = forms.ModelChoiceField(queryset=Category.objects.all(), required=False)
     sort_by = forms.ChoiceField(choices=sort_choices, required=False)
@@ -222,6 +237,17 @@ class AdminItemFilterForm(forms.Form):
             item_list = item_list.filter(keyword_filter)
 
         if valid:
+            status = self.cleaned_data.get('status')
+            if status:
+                item_list = item_list.filter(laststatus__machine_name=status.machine_name)
+
+            year = self.cleaned_data.get('year')
+            if year:
+                start = datetime.date(month=1, day=1, year=int(year))
+                end = datetime.date(month=1, day=1, year=int(year)+1)
+                statuses = Status.objects.filter(timestamp__range=(start, end))
+                item_list = item_list.filter(status__in=statuses)
+
             order_by = self.cleaned_data.get('sort_by') or '-pk'
         else:
             order_by = '-pk'
@@ -240,10 +266,13 @@ class ItemFilterForm(AdminItemFilterForm):
         ('valuable', 'Valuable only'),
     )
 
-    items = forms.ChoiceField(choices=item_choices, required=False, initial=item_choices[0][0])
+    items = forms.ChoiceField(
+        choices=item_choices, required=False, initial=item_choices[0][0])
 
     def filter(self):
-        """Update filter so lab attendants can only see items with CHECKED_IN status."""
+        """
+        Update filter so lab attendants can only see items with CHECKED_IN status.
+        """
         item_list = super(ItemFilterForm, self).filter()
         item_list = item_list.filter(laststatus__machine_name=Action.CHECKED_IN)
         return item_list
@@ -254,7 +283,9 @@ class ItemArchiveForm(forms.Form):
     """Item archiving form used on the administrative item listing page."""
 
     def __init__(self, *args, item_list, **kwargs):
-        """Setup a pre-filled checkbox, based on the item's current archived status."""
+        """
+        Setup a pre-filled checkbox, based on the item's current archived status.
+        """
         super(ItemArchiveForm, self).__init__(*args, **kwargs)
 
         self.item_list = item_list
