@@ -14,22 +14,38 @@ from .forms import (
     ItemArchiveForm,
     ItemFilterForm,
 )
-from .models import Item, Status
+from .models import Item, Status, Action
 
 
 @user_passes_test(lambda u: u.is_staff)
 def admin_itemlist(request):
-    """Administrative item listing.
-
-    Allows for viewing of items, taking actions on items, and archiving
-    items.
-
     """
-    item_filter_form = AdminItemFilterForm(request.GET if 'action' in request.GET else None)
+    Administrative item listing. Allows for viewing of items,
+    taking actions on items, and archiving items.
+    """
+    # initialize as checked_in items from current year
+    initial = {}
+    year = Status.objects.dates('timestamp', 'year', 'DESC').first()
+    if year:
+        initial['year'] = str(year.year)
+    action = Action.objects.filter(machine_name=Action.CHECKED_IN).first()
+    if action:
+        initial['status'] = action.pk
+
+    item_filter_form = AdminItemFilterForm(
+        request.GET if 'action' in request.GET else initial)
     item_list = item_filter_form.filter()
-    item_list = item_list.select_related('category', 'location', 'possible_owner', 'returned_to')
+    if not item_filter_form.is_valid():
+         item_list = item_list.none()
+         return render(request, 'items/admin-itemlist.html', {
+             'item_list': item_list,
+             'item_filter': item_filter_form
+         })
+
+    item_list = item_list.select_related(
+        'category', 'location')
     item_list = item_list.prefetch_related(
-        'status_set', 'status_set__action_taken', 'status_set__performed_by')
+        'status_set', 'status_set__action_taken')
 
     if request.method == 'POST':
         item_archive_form = ItemArchiveForm(request.POST, item_list=item_list)
@@ -37,13 +53,10 @@ def admin_itemlist(request):
             item_archive_form.save()
             messages.success(request, 'Item successfully changed')
             return HttpResponseRedirect(request.get_full_path())
-    else:
-        item_archive_form = ItemArchiveForm(item_list=item_list)
 
     return render(request, 'items/admin-itemlist.html', {
-        'items': item_list,
-        'item_filter': item_filter_form,
-        'archive_form': item_archive_form,
+        'item_list': item_list,
+        'item_filter': item_filter_form
     })
 
 
@@ -76,12 +89,12 @@ def adminaction(request, item_num):
 
 @login_required
 def itemlist(request):
-    """Non-administrative item listing.
-
-    Can view item list and return items.
-
     """
-    item_filter_form = ItemFilterForm(request.GET if 'action' in request.GET else None)
+    Non-administrative item listing (for lab attendants).
+    Can view item list and return items.
+    """
+    item_filter_form = ItemFilterForm(
+        request.GET if 'action' in request.GET else None)
     item_list = item_filter_form.filter()
     item_list = item_list.select_related('category', 'location', 'possible_owner')
     item_list = item_list.prefetch_related('status_set', 'status_set__action_taken')
@@ -93,10 +106,9 @@ def itemlist(request):
 
 @login_required
 def itemstatus(request, item_num):
-    """Non-administrative item status page.
-
+    """
+    Non-administrative item status page.
     Can view status and information about an item.
-
     """
     chosen_item = get_object_or_404(Item, pk=item_num)
     status_list = Status.objects.filter(item=item_num)
@@ -108,10 +120,9 @@ def itemstatus(request, item_num):
 
 @login_required
 def checkin(request):
-    """Item check in form.
-
+    """
+    Item check in form.
     Allows lab attendant to check an item into inventory.
-
     """
     if request.method == 'POST':
         form = CheckInForm(request.POST)
@@ -138,10 +149,9 @@ def autocomplete(request):
 
 @login_required
 def printoff(request, item_id):
-    """Item check in print off page.
-
+    """
+    Item check in print off page.
     Page lab attends should print off when they check in an item in.
-
     """
     if request.method == 'POST' and request.POST['action'] == 'Return to item check-in':
         return HttpResponseRedirect(reverse('checkin'))
