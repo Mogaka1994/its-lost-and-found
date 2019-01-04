@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+from lostandfound.items.managers import ItemQuerySet
 
 AUTH_USER_MODEL = settings.AUTH_USER_MODEL
 
@@ -117,6 +118,8 @@ class Item(models.Model):
     location = models.ForeignKey(Location)
     possible_owner = models.ForeignKey(AUTH_USER_MODEL, related_name='item_possible_owner', null=True)
     returned_to = models.ForeignKey(AUTH_USER_MODEL, related_name='item_returned_to', null=True)
+
+    objects = ItemQuerySet.as_manager()
 
     @property
     def status_count(self):
