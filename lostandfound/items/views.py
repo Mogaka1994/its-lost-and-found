@@ -25,9 +25,11 @@ def admin_itemlist(request):
     """
     # initialize as checked_in items from current year
     initial = {}
-    year = Status.objects.dates('timestamp', 'year', 'DESC').first()
-    if year:
+    try:
+        year = Status.objects.dates('timestamp', 'year', 'DESC').first()
         initial['year'] = str(year.year)
+    except:
+        pass
     action = Action.objects.filter(machine_name=Action.CHECKED_IN).first()
     if action:
         initial['status'] = action.pk

@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
         group, _ = Group.objects.get_or_create(name='ITS Manager')
 
         for perm in ITS_MANAGER_PERMISSIONS:
-            content_type = ContentType.objects.get(app_label=perm[0], model=perm[1])
+            content_type, _ = ContentType.objects.get_or_create(app_label=perm[0], model=perm[1])
             permission, _ = Permission.objects.get_or_create(
                 content_type=content_type,
                 codename=perm[2]
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
         group, _ = Group.objects.get_or_create(name='ITS Manager')
 
         for perm in ITS_MANAGER_PERMISSIONS:
-            content_type = ContentType.objects.get(app_label=perm[0], model=perm[1])
+            content_type, _ = ContentType.objects.get_or_create(app_label=perm[0], model=perm[1])
             permission, _ = Permission.objects.get_or_create(
                 content_type=content_type,
                 codename=perm[2]
