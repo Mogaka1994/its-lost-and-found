@@ -180,9 +180,12 @@ class AdminItemFilterForm(forms.Form):
         ('valuable', 'Valuable only'),
     )
     years = [(None, '----')]
-    years += [
-        (x.year, str(x.year)) for x in Status.objects.dates('timestamp', 'year')
-    ]
+    try:
+        years += [
+            (x.year, str(x.year)) for x in Status.objects.dates('timestamp', 'year')
+        ]
+    except:
+        pass
 
     status = forms.ModelChoiceField(
         queryset=Action.objects.all(), required=False, label="Current status")
