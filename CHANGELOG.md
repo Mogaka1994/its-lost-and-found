@@ -1,8 +1,24 @@
 # Change log for ITS Lost and Found
 
-## 1.5.0 - unreleased
+## 1.5.0 - 2019-01-08
 
-In progress...
+### Added/Changed
+- Add new ITS Manager permissions group to control access to Django admin page. Members of this group will have access to Change and Add Locations and Categories.
+- Expose Categories in Django admin (see above).
+- Add lost and found statistics widget to home page. This dashboard shows the number of items checked-in and returned by day, year, and current user.
+- Add Datatables.js to AdminItemList (client-side sorting, etc)
+- Refactor AdminItemList view and forms.
+  - Remove redundant columns for clarity and design (all info on detail page).
+  - Add year filter and current status (last action) filter.
+  - Initialize filter to current year and "Checked-in" status in order to improve performance of common use case.
+- Add odin autocomplete field on AdminActionForm
+
+### Fixed
+- Fix failing tests. Skip unnecessary and/or fragile tests and update Travis CI configuration Continuous integration/testing server).
+
+### Maintenance
+- Update all Python dependencies
+- Update LDAP server hostname
 
 
 ## 1.4.0 - 2018-01-03
@@ -11,7 +27,6 @@ In progress...
 - Use WDT ldap group (instead of ARC) when applying developer staff access
 
 ## 1.3.0 - 2016-12-20
-
 
 
 ## 1.2.0 - 2016-06-21

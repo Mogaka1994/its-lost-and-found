@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 
-VERSION = '1.5.0.dev0'
+VERSION = '1.5.0'
 
 
 setup(
@@ -14,7 +14,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'django>=1.11.17,<2.0',
+        'django>=1.11.18,<2.0',
         'django-arcutils[ldap]>=2.24.0',
         'django-bootstrap-form>=3.2.1',
         'django-local-settings>=1.0b7',
