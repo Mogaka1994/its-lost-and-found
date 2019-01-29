@@ -52,6 +52,10 @@ class AdminActionForm(forms.Form):
     action_choice = forms.ModelChoiceField(
         queryset=Action.objects.all(), empty_label=None)
     note = forms.CharField(widget=forms.Textarea, required=False)
+
+    username = forms.CharField(
+        required=False, label='Odin username',
+        help_text='Start typing a username for suggestions')
     first_name = forms.CharField(required=False)
     last_name = forms.CharField(required=False)
     email = forms.EmailField(required=False)

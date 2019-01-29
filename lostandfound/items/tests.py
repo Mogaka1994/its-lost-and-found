@@ -603,7 +603,7 @@ class AdminActionFormTest (TestCase):
         user = create_user()
 
         form = AdminActionForm(current_user=user)
-        self.assertEquals(len(form.fields), 4)
+        self.assertEquals(len(form.fields), 5)
 
         # Test 2 - Staff user
 
@@ -612,7 +612,7 @@ class AdminActionFormTest (TestCase):
 
         form = AdminActionForm(current_user=user)
         self.assertEqual(len(form.fields['action_choice'].queryset), total_actions)
-        self.assertEquals(len(form.fields), 5)
+        self.assertEquals(len(form.fields), 6)
 
     def test_checkout_email(self):
 
